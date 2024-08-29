@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
-import { IMechanicData, MechnicDoc } from "../interfaces/IMechanic";
+import { IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import Mechanic from "../models/mechanicModel";
 import MechanicData from "../models/mechanicdataModel";
 import { Types } from 'mongoose';
+import Service from "../models/serviceModel";
 
 import bcrypt from 'bcrypt';
 import { deleteFileFromS3 } from "../middleware/s3UploadMiddleware";
@@ -265,7 +266,66 @@ class mechanicRepositories {
         } catch (error) {
             console.log("Error updating status:", error);
         }
+
+
+
     }
+
+    async nameExists(serviceName: string, fileUrl: string): Promise<boolean> {
+        const existingService = await Service.findOne({ serviceName });
+        try {
+            if (existingService) {
+                await deleteFileFromS3(fileUrl);
+            }
+        } catch (deleteError) {
+            console.error("Error deleting image from S3:", deleteError);
+        }
+        return !!existingService;
+    }
+
+    async addService(serviceData: IService): Promise<any> {
+        try {
+            const { name, details, price, fileUrl, id } = serviceData;
+            let img: any = serviceData.fileUrl
+            const isNameExist = await this.nameExists(name, img);
+            if (isNameExist) {
+                console.log("Service name already exists.");
+                return { error: "Service name already exists." };
+            }
+            const newService = new Service({
+                mechanic: id,
+                serviceName: name,
+                serviceDetails: details,
+                price: price,
+                imageUrl: fileUrl
+            });
+            const savedService = await newService.save();
+            return { message: 'Service added successfully', savedService }
+        } catch (error) {
+            console.error("Error in repository:", error);
+            const imageUrl: any = serviceData.fileUrl;
+            try {
+                await deleteFileFromS3(imageUrl);
+            } catch (deleteError) {
+                console.error("Error deleting image from S3:", deleteError);
+            }
+
+            return null;
+        }
+    }
+
+    async fetchService(id: String): Promise<any> {
+        try {
+            const result = await Service.find({ mechanic: id })
+            console.log(result);
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+
 
 }
 

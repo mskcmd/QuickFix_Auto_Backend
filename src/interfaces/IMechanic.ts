@@ -55,3 +55,11 @@ export interface UploadedFile {
     mimetype: string;
   }[];
 }
+
+export interface IService {
+  id:string;
+  name: string;
+  details: string;
+  price: string;
+  fileUrl?: string; // fileUrl is optional
+}

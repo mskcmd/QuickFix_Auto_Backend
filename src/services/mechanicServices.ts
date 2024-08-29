@@ -1,6 +1,6 @@
 import MechnicRepositories from "../repositories/mechanicRepositories";
 import OtpRepository from "../repositories/otpRepositories";
-import { IMechanicData, MechnicDoc } from "../interfaces/IMechanic";
+import { IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import { sendVerifyMail } from "../utils/otpVerification";
 import bcrypt from "bcrypt";
 import { CreateJWT } from "../utils/generateToken";
@@ -198,6 +198,26 @@ class mechanicServices {
 
         }
     }
+
+    async addService(serviceData: IService): Promise<IService | null> {
+        try {
+            const result = await this.mechanicRepo.addService(serviceData);
+            return result;
+        } catch (error) {
+            console.error("Error adding service:", error);
+            return null;
+        }
+    }
+
+    async fetchService(id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.fetchService(id)
+            return result
+        } catch (error) {
+
+        }
+    }
+
 
 }
 

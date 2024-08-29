@@ -1,5 +1,5 @@
 import { log } from "util";
-import { MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
+import { IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
 import MechanicServices from "../services/mechanicServices";
 import { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
@@ -293,21 +293,60 @@ class mechanicController {
   async statusUpdate(req: Request, res: Response): Promise<void> {
     const id = req.body.params?.Id as string;
     const status = req.body.params?.Status as string;
-  
+
     console.log("Received ID and Status:", id, status);
-  
+
     try {
       if (!id || !status) {
         res.status(400).json({ error: "Missing ID or Status" });
         return;
       }
-      const result = await this.mechanicServices.statusUpdate(id,status)
+      const result = await this.mechanicServices.statusUpdate(id, status)
       res.status(200).json({ message: "Status updated successfully" });
     } catch (error) {
       console.error("Error updating status:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  async addService(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("Request body:", req.body);
+      console.log("Uploaded file:", req.file);
+
+      const { name, details, price, id } = req.body;
+      let fileUrl: string | undefined;
+
+      if (req.file) {
+        fileUrl = await uploadFile(req.file);
+      }
+
+      const serviceData: IService = {
+        id,
+        name,
+        details,
+        price,
+        fileUrl,
+      };
+
+      const result = await this.mechanicServices.addService(serviceData);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error adding service:", error);
+      res.status(500).json({ message: 'Failed to add service', error });
+    }
+  }
+
+  async fetchService(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.query.id as string;
+      const result = await this.mechanicServices.fetchService(id)
+      res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
 
 }
 
