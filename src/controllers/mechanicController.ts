@@ -311,8 +311,6 @@ class mechanicController {
 
   async addService(req: Request, res: Response): Promise<void> {
     try {
-      console.log("Request body:", req.body);
-      console.log("Uploaded file:", req.file);
 
       const { name, details, price, id } = req.body;
       let fileUrl: string | undefined;

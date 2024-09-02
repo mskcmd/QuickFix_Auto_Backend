@@ -12,21 +12,15 @@ const otpRepositories = new OtpRepository()
 const userRepository = new UserRepository()
 const useServices = new UserServices(userRepository,otpRepositories)
 const userController = new UserController(useServices)
+import userAuth from "../middleware/userAuthMiddleware";
 
 
-userRoute.post("/booking",userController.mechBooking.bind(userController))
-userRoute.get("/fetchBookData",userController.fetchBookData.bind(userController))
-userRoute.post("/updateProfle",uploadSingleImage,userController.updateProfile.bind(userController))
+userRoute.post("/booking",userAuth,userController.mechBooking.bind(userController))
+userRoute.get("/fetchBookData",userAuth,userController.fetchBookData.bind(userController))
+userRoute.post("/updateProfle",userAuth,uploadSingleImage,userController.updateProfile.bind(userController))
 
-
-
-
-
-
-
-
-
-
+userRoute.post("/chat/create",userController.createChat.bind(userController))
+// userRoute.post("/chat/fetchChats",userController.fetchChats.bind(userController))
 
 
 

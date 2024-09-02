@@ -43,3 +43,9 @@ export interface IBookingData {
 }
 
 export interface IBooking extends IBookingData, Document {}
+
+export interface CustomRequest extends Request {
+  user: {
+    _id: string;
+  };
+}

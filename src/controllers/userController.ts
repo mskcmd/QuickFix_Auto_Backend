@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import UserServices from "../services/userServices";
-import { IBookingData, UserDoc } from "../interfaces/IUser";
+import { CustomRequest, IBookingData, UserDoc } from "../interfaces/IUser";
 import { sendVerifyMail } from "../utils/otpVerification";
 import { IBooking } from "../models/mechanikBookingModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
+import Chat from "../models/chatModel";
+import User from "../models/userModel";
 
 class UserController {
   private userService: UserServices;
@@ -91,21 +93,16 @@ class UserController {
     try {
       const { email, password } = req.body;
       console.log(email, password);
-
       const result = await this.userService.login(email, password);
-      console.log("yy", result?.result?.isVerified);
-
       if (result?.result?.isVerified === false) {
         res.json({ isverified: false, message: "User not verified", result });
         return;
       }
-
       if (result?.data?.data?.succuss === true) {
         const access_token = result.data.data.token;
         const refresh_token = result.data.data.refreshToken;
         const accessTokenMaxAge = 5 * 60 * 1000; // 5 minutes
         const refreshTokenMaxAge = 48 * 60 * 60 * 1000; // 48 hours
-
         res
           .status(200)
           .cookie("access_token", access_token, {
@@ -344,20 +341,76 @@ class UserController {
 
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
-        console.log("Request body:", req.body);
-        console.log("Uploaded file:", req.file);
-
-        let fileUrl = null;
-        if (req.file) {
-            fileUrl = await uploadFile(req.file);
-        }
-        const response = await this.userService.updateProfile(req.body, fileUrl);
-        res.status(200).json({ message: "Profile updated successfully", data: response });
+      let fileUrl = null;
+      if (req.file) {
+        fileUrl = await uploadFile(req.file);
+      }
+      const response = await this.userService.updateProfile(req.body, fileUrl);
+      res.status(200).json({ message: "Profile updated successfully", data: response });
     } catch (error) {
-        console.error("Error in updateProfile controller:", error);
-        res.status(500).json({ message: "Profile update failed" });
+      console.error("Error in updateProfile controller:", error);
+      res.status(500).json({ message: "Profile update failed" });
     }
-}
+  }
+
+  async createChat(req: any, res: Response): Promise<void> {
+    try {
+      const { userId, current_userId }: any = req.body;
+
+      if (!userId) {
+        console.log("UserId param not sent with request");
+        res.sendStatus(400);
+        return;
+      }
+
+      let isChat: any = await Chat.find({
+        isGroupChat: false,
+        $and: [
+          { users: { $elemMatch: { $eq:current_userId } } },
+          { users: { $elemMatch: { $eq: userId } } },
+        ],
+      })
+        .populate("users", "-password")
+        .populate("latestMessage")
+        .exec();
+
+      isChat = await User.populate(isChat, {
+        path: "latestMessage.sender",
+        select: "name email imageUrl",
+      });
+
+      if (isChat.length > 0) {
+        res.send(isChat[0]);
+      } else {
+        const chatData = {
+          chatName: "sender",
+          isGroupChat: false,
+          users: [current_userId, userId],
+        };
+
+        try {
+          const createdChat = await Chat.create(chatData);
+          const fullChat = await Chat.findOne({ _id: createdChat._id })
+            .populate("users", "-password")
+            .populate("latestMessage")
+            .exec();
+
+          res.status(200).send(fullChat);
+        } catch (error) {
+          console.error("Error in chat creation:", error);
+          res.status(400).send("Failed to create the chat");
+        }
+      }
+    } catch (error) {
+      console.error("Server error:", error);
+      res.status(500).send("Server error");
+    }
+  }
+  
+
+
+
+
 
 
 
