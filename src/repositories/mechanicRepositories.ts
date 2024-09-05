@@ -325,6 +325,59 @@ class mechanicRepositories {
         }
     }
 
+    async searchUsers(keyword: string, id: string): Promise<any> {
+        try {
+            const result = await Booking.find({ mechanic: id })
+                .populate({
+                    path: 'user',
+                    select: '-password'
+                });
+
+            const seenUserIds: any = new Set();
+            const filteredUsers = result
+                .filter(booking => {
+                    const user: any = booking.user;
+                    const regex = new RegExp(keyword, 'i');
+                    return regex.test(user?.name);
+                })
+                .map(booking => booking.user)
+                .filter(user => {
+                    const userId = (user as any)._id;  // Casting to 'any' to access '_id'
+                    if (!seenUserIds.has(userId.toString())) {
+                        seenUserIds.add(userId.toString());
+                        return true;
+                    }
+                    return false;
+                });
+
+            console.log("Filtered Users:", filteredUsers);
+            return filteredUsers;
+
+        } catch (error) {
+            console.log(error);
+            throw new Error("Failed to fetch users");
+        }
+    }
+
+
+    async searchServices(keyword: string, mechanicId: String): Promise<any> {
+        try {
+            const services = await Service.find({ mechanic: mechanicId });
+
+            const filteredServices = services.filter(service => {
+                const regex: any = new RegExp(keyword, 'i');
+                return regex.test(service.serviceName);
+            });
+
+            console.log("Filtered Services:", filteredServices);
+            return filteredServices;
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+
 
 
 }

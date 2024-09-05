@@ -6,6 +6,9 @@ import { IBooking } from "../models/mechanikBookingModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
 import Chat from "../models/chatModel";
 import User from "../models/userModel";
+import Message from "../models/messageModel";
+import Mechanic from "../models/mechanicModel";
+import mongoose from "mongoose";
 
 class UserController {
   private userService: UserServices;
@@ -90,6 +93,8 @@ class UserController {
   }
 
   async login(req: Request, res: Response): Promise<void> {
+    console.log("ha");
+
     try {
       const { email, password } = req.body;
       console.log(email, password);
@@ -355,64 +360,129 @@ class UserController {
 
   async createChat(req: any, res: Response): Promise<void> {
     try {
-      const { userId, current_userId }: any = req.body;
 
-      if (!userId) {
-        console.log("UserId param not sent with request");
+      const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
+      console.log(senderId, receiverId);
+
+      if (!senderId || !receiverId) {
+        console.log("UserId or receverId param not sent with request");
         res.sendStatus(400);
         return;
       }
 
-      let isChat: any = await Chat.find({
-        isGroupChat: false,
-        $and: [
-          { users: { $elemMatch: { $eq:current_userId } } },
-          { users: { $elemMatch: { $eq: userId } } },
-        ],
-      })
-        .populate("users", "-password")
-        .populate("latestMessage")
-        .exec();
-
-      isChat = await User.populate(isChat, {
-        path: "latestMessage.sender",
-        select: "name email imageUrl",
-      });
-
-      if (isChat.length > 0) {
-        res.send(isChat[0]);
+      const response = await this.userService.createChat(senderId, receiverId);
+      if (response) {
+        res.status(200).send(response);
       } else {
-        const chatData = {
-          chatName: "sender",
-          isGroupChat: false,
-          users: [current_userId, userId],
-        };
-
-        try {
-          const createdChat = await Chat.create(chatData);
-          const fullChat = await Chat.findOne({ _id: createdChat._id })
-            .populate("users", "-password")
-            .populate("latestMessage")
-            .exec();
-
-          res.status(200).send(fullChat);
-        } catch (error) {
-          console.error("Error in chat creation:", error);
-          res.status(400).send("Failed to create the chat");
-        }
+        res.status(404).send("Chat not found");
       }
     } catch (error) {
       console.error("Server error:", error);
       res.status(500).send("Server error");
     }
   }
-  
 
+  async fetchChats(req: any, res: Response): Promise<void> {
+    try {
+      const { senderId } = req.query as { senderId: string };
 
+      let chats: any = await Chat.find({
+        users: { $elemMatch: { $eq: senderId } },
+      })
+        .populate("users", "-password")
+        .populate("latestMessage")
+        .sort({ updatedAt: -1 });
 
+      chats = await User.populate(chats, {
+        path: "latestMessage.sender",
+        select: "name email imageUrl",
+      });
 
+      res.status(200).send(chats);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Failed to fetch chats" });
+    }
+  }
 
+  async allUsers(req: Request, res: Response): Promise<void> {
+    try {
+      console.log(req.query.search);
 
+      const keyword = req.query.search
+        ? {
+          $or: [
+            { name: { $regex: req.query.search as string, $options: "i" } },
+            { email: { $regex: req.query.search as string, $options: "i" } },
+          ],
+        }
+        : {};
+
+      let users: any
+       users = await User.find(keyword)
+      // users = await Mechanic.find(keyword)
+      console.log("users", users);
+      res.json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
+
+  async sendMessage(req: Request, res: Response): Promise<any> {
+    try {
+      const { content, chatId, senderId } = req.body;
+      console.log(content, chatId, senderId);
+
+      if (!content || !chatId) {
+        console.log("Invalid data passed into request");
+        return res.sendStatus(400);
+      }
+
+      const newMessage = {
+        sender: senderId,
+        content: content,
+        chat: chatId,
+      };
+
+      try {
+        let message: any = await Message.create(newMessage);
+
+        message = await message.populate("sender", "name imageUrl");
+        message = await message.populate("chat");
+        message = await message.populate({
+          path: "chat.users",
+          select: "name imageUrl email",
+          model: User
+        });
+
+        await Chat.findByIdAndUpdate(req.body.chatId, {
+          latestMessage: message,
+        });
+        console.log("m", message);
+
+        res.json(message);
+      } catch (error) {
+        console.error("Error saving message to the database:", (error as Error).message);
+        res.status(400).json({ error: "Failed to save message" });
+      }
+    } catch (error) {
+      console.error("Error sending message:", (error as Error).message);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+
+  async allMessagess(req: Request, res: Response): Promise<any> {
+    try {
+      const message = await Message.find({ chat: req.params.chatId })
+        .populate("sender", "name imageUrl email")
+        .populate("chat");
+
+      res.json(message);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Something went wrong" });
+    }
+  }
 
 }
 

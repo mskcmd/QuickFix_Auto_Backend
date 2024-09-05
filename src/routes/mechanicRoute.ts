@@ -20,5 +20,7 @@ mechanicRoute.get("/users",mechanicController.fetchUsers.bind(mechanicController
 mechanicRoute.put("/statusUpdate",mechanicController.statusUpdate.bind(mechanicController))
 mechanicRoute.post("/addService",uploadSingleImage,mechanicController.addService.bind(mechanicController))
 mechanicRoute.get("/fetchService",mechanicController.fetchService.bind(mechanicController))
+mechanicRoute.get("/searchUsers",mechanicController.searchUsers.bind(mechanicController))
+mechanicRoute.get("/searchServices",mechanicController.searchServices.bind(mechanicController))
 
 export default mechanicRoute

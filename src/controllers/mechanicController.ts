@@ -5,6 +5,7 @@ import { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
 import MechanicData from "../models/mechanicdataModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
+import User from "../models/userModel";
 
 class mechanicController {
   private mechanicServices: MechanicServices;
@@ -342,6 +343,31 @@ class mechanicController {
       res.status(201).json(result);
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async searchUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.query.id as string;
+      const keyword = req.query.search as string;
+      const result = await this.mechanicServices.searchUsers(keyword, id)
+      res.json(result);
+    } catch (error) {
+      console.error("Error in searchUsers:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  async searchServices(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("hauij");
+      const id = req.query.id as string;
+      const keyword = req.query.search as string;
+      const result = await this.mechanicServices.searchServices(keyword, id)
+      res.json(result);
+    } catch (error) {
+      console.error("Error in searchUsers:", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   }
 

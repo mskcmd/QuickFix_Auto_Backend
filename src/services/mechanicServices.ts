@@ -214,6 +214,27 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchService(id)
             return result
         } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async searchUsers(keyword: string, id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.searchUsers(keyword, id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async searchServices(keyword: string, id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.searchServices(keyword, id)
+            return result
+        } catch (error) {
+            console.log(error);
 
         }
     }

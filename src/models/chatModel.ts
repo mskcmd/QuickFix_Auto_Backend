@@ -15,16 +15,12 @@ const chatSchema: Schema<IChat> = new Schema(
     users: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "User"
       },
     ],
     latestMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",
-    },
-    groupAdmin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
   },
   {

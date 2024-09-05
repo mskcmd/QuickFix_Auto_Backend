@@ -20,7 +20,13 @@ userRoute.get("/fetchBookData",userAuth,userController.fetchBookData.bind(userCo
 userRoute.post("/updateProfle",userAuth,uploadSingleImage,userController.updateProfile.bind(userController))
 
 userRoute.post("/chat/create",userController.createChat.bind(userController))
-// userRoute.post("/chat/fetchChats",userController.fetchChats.bind(userController))
+userRoute.get("/chat/fetchChats",userController.fetchChats.bind(userController))
+userRoute.get("/chat/allUsers",userController.allUsers.bind(userController))
+
+userRoute.post("/chat/sendMessage",userController.sendMessage.bind(userController))
+userRoute.get("/chat/allMesssge/:chatId",userController.allMessagess.bind(userController))
+
+
 
 
 

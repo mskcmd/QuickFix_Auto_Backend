@@ -157,7 +157,7 @@ class UserServices {
         try {
             const updatedData = {
                 ...userData,
-                image: fileUrl, 
+                image: fileUrl,
             };
             return await this.userRepo.updateProfile(updatedData);
         } catch (error) {
@@ -165,6 +165,18 @@ class UserServices {
             throw new Error("Failed to update profile");
         }
     }
+
+    async createChat(senderId: string, receverId: string): Promise<any> {
+        try {
+            const chat = await this.userRepo.createChat(senderId, receverId);
+            return chat;
+        } catch (error) {
+            console.error("Error in service:", error);
+            throw error;
+        }
+    }
+
+
 
 }
 
