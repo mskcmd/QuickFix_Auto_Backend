@@ -176,6 +176,16 @@ class UserServices {
         }
     }
 
+    async fetchPayment(id: string): Promise<any> {
+        try {
+            const result = this.userRepo.fetchPayment(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 
 
 }

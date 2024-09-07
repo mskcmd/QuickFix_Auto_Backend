@@ -239,6 +239,17 @@ class mechanicServices {
         }
     }
 
+    async createBill(userId: any, name: any, vehicleNumber: any, services: any, subtotal: any, gst: any, total: any, mechId: any): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.createBill(userId, name, vehicleNumber, services, subtotal, gst, total, mechId)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+
 
 }
 

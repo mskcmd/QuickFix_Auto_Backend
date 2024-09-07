@@ -28,6 +28,7 @@ declare module 'express-session' {
 }
 
 
+
 export interface IBookingData {
   user?: Schema.Types.ObjectId;
   mechanic?: Schema.Types.ObjectId;
@@ -49,3 +50,4 @@ export interface CustomRequest extends Request {
     _id: string;
   };
 }
+

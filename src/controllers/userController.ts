@@ -419,7 +419,7 @@ class UserController {
         : {};
 
       let users: any
-       users = await User.find(keyword)
+      users = await User.find(keyword)
       // users = await Mechanic.find(keyword)
       console.log("users", users);
       res.json(users);
@@ -483,6 +483,20 @@ class UserController {
       res.status(400).json({ message: error.message || "Something went wrong" });
     }
   }
+
+  async fetchPayment(req: Request, res: Response): Promise<any> {
+    try {
+      console.log("paymet id", req.query.id);
+      const id: any = req.query.id
+      const result = await this.userService.fetchPayment(id)
+      console.log(result);
+       res.json(result)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 
 }
 

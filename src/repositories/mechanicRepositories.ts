@@ -8,6 +8,7 @@ import Service from "../models/serviceModel";
 import bcrypt from 'bcrypt';
 import { deleteFileFromS3 } from "../middleware/s3UploadMiddleware";
 import Booking from "../models/mechanikBookingModel";
+import Payment from "../models/paymentModel";
 
 class mechanicRepositories {
     async findUserByEmail(email: string): Promise<MechnicDoc | null> {
@@ -376,6 +377,40 @@ class mechanicRepositories {
 
         }
     }
+
+    async createBill(userId: any, name: any, vehicleNumber: any, services: any, subtotal: any, gst: any, total: any, mechId: any): Promise<any> {
+        try {
+            console.log("User ID:", userId);
+            console.log("Name:", name);
+            console.log("Vehicle Number:", vehicleNumber);
+            console.log("Services:", services);
+            console.log("Subtotal:", subtotal);
+            console.log("GST:", gst);
+            console.log("Total:", total);
+            console.log("Mechanic ID:", mechId);
+
+            // const result = await Payment.
+
+            const servicePayment = new Payment({
+                gst: gst,
+                mechanic: mechId,
+                name: name,
+                services: services,
+                subtotal: subtotal,
+                total: total,
+                user: userId,
+                vehicleNumber: vehicleNumber
+            })
+
+            const result = await servicePayment.save()
+
+
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 
 
 

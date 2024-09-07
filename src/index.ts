@@ -169,24 +169,26 @@ import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
 import { errorHandler, notFound } from './middleware/errorMiddleware';
 import cookieParser from 'cookie-parser';
+import bodyParser from "body-parser"
+
 
 require('dotenv').config();
 
 const app = express();
 const port = 5000;
 
-// Connect to the database
 connectDB();
 
-// Middlewares
 app.use(
   session({
     secret: uuidv4(),
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 1 day in milliseconds
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }, 
   })
 );
+
+app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.json());
 app.use(

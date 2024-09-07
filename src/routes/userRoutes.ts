@@ -4,6 +4,10 @@ import UserServices from "../services/userServices";
 import UserRepository from "../repositories/userRepositories";
 import OtpRepository from "../repositories/otpRepositories";
 import  uploadSingleImage  from "../middleware/s3UploadMiddleware";
+import userAuth from "../middleware/userAuthMiddleware";
+import PaymentController from "../controllers/paymentController";
+import PaymentServics from "../services/paymentServics";
+import PaymentRepositories from "../repositories/paymentRepositories"; 
 
 
 const userRoute:Router = express.Router()
@@ -12,12 +16,14 @@ const otpRepositories = new OtpRepository()
 const userRepository = new UserRepository()
 const useServices = new UserServices(userRepository,otpRepositories)
 const userController = new UserController(useServices)
-import userAuth from "../middleware/userAuthMiddleware";
 
+const paymentRepositories =  new PaymentRepositories()
+const paymentService = new PaymentServics(paymentRepositories)
+const paymentController = new PaymentController(paymentService)
 
-userRoute.post("/booking",userAuth,userController.mechBooking.bind(userController))
-userRoute.get("/fetchBookData",userAuth,userController.fetchBookData.bind(userController))
-userRoute.post("/updateProfle",userAuth,uploadSingleImage,userController.updateProfile.bind(userController))
+userRoute.post("/booking",userController.mechBooking.bind(userController))
+userRoute.get("/fetchBookData",userController.fetchBookData.bind(userController))
+userRoute.post("/updateProfle",uploadSingleImage,userController.updateProfile.bind(userController))
 
 userRoute.post("/chat/create",userController.createChat.bind(userController))
 userRoute.get("/chat/fetchChats",userController.fetchChats.bind(userController))
@@ -26,7 +32,10 @@ userRoute.get("/chat/allUsers",userController.allUsers.bind(userController))
 userRoute.post("/chat/sendMessage",userController.sendMessage.bind(userController))
 userRoute.get("/chat/allMesssge/:chatId",userController.allMessagess.bind(userController))
 
+userRoute.get("/fetchPayment",userController.fetchPayment.bind(userController))
 
+userRoute.post("/create-checkout-session",paymentController.createCheckoutSession.bind(paymentController))
+userRoute.post("/webhook",paymentController.webhook.bind(paymentController))
 
 
 

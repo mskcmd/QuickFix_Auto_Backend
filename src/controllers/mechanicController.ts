@@ -370,6 +370,27 @@ class mechanicController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+  async createBill(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("bill", req.body);
+
+      const {
+        userId,
+        name,
+        vehicleNumber,
+        services,
+        subtotal,
+        gst,
+        total,
+        mechId
+      } = req.body;
+
+      const result = await this.mechanicServices.createBill(userId,name,vehicleNumber,services,subtotal,gst,total,mechId)
+     
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  }
 
 
 }

@@ -22,5 +22,5 @@ mechanicRoute.post("/addService",uploadSingleImage,mechanicController.addService
 mechanicRoute.get("/fetchService",mechanicController.fetchService.bind(mechanicController))
 mechanicRoute.get("/searchUsers",mechanicController.searchUsers.bind(mechanicController))
 mechanicRoute.get("/searchServices",mechanicController.searchServices.bind(mechanicController))
-
+mechanicRoute.post("/CreateBill",mechanicController.createBill.bind(mechanicController))
 export default mechanicRoute

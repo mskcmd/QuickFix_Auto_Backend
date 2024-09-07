@@ -33,7 +33,7 @@ const userAuth = async (req: Request, res: Response, next: NextFunction) => {
       if (!token) {
         return res.status(401).json({ success: false, message: "Unable to refresh access token" });
       }
-      const accessTokenMaxAge = 30 * 60 * 1000;
+      const accessTokenMaxAge = 30 * 60 * 10000;
       res.cookie("access_token", token, {
         maxAge: accessTokenMaxAge,
         sameSite: "none",

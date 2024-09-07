@@ -63,3 +63,22 @@ export interface IService {
   price: string;
   fileUrl?: string; // fileUrl is optional
 }
+
+// models/ServiceOrder.ts
+
+export interface ServiceOrder {
+  gst: number;              
+  mechanic: any;         
+  name: string;            
+  services: string[];      
+  subtotal: number;        
+  total: number;            
+  user: any;             
+  vehicleNumber: string;    
+  status?: "pending" | "completed" | "failed";
+  upiId?: string;           
+  bank?: string;            
+  createdAt?: Date;       
+  updatedAt?: Date;     
+}
+

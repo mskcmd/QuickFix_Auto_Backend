@@ -3,28 +3,29 @@ import User from "../models/userModel";
 import { IBookingData, UseLog, UserDoc } from "../interfaces/IUser";
 import bcrypt from 'bcrypt';
 import Admin from "../models/adminModel";
-import mongoose, { Model,Document } from 'mongoose';
+import mongoose, { Model, Document } from 'mongoose';
 import MechanicData from "../models/mechanicdataModel";
 import Booking, { IBooking } from "../models/mechanikBookingModel";
 import Mechanic from "../models/mechanicModel";
 import { MechnicDoc } from "../interfaces/IMechanic";
 import Chat from "../models/chatModel";
+import Payment from "../models/paymentModel";
 
 
 class UserRepository {
   [x: string]: any;
 
-    // Helper function to determine the model based on ID
-    private async getModelById(id: string): Promise<Model<any> | null> {
-      const models = [User, Mechanic, Admin] as Model<any>[];
-    
-      for (const model of models) {
-        const document = await model.findById(id).exec();
-        if (document) return model;
-      }
-      return null;
+  // Helper function to determine the model based on ID
+  private async getModelById(id: string): Promise<Model<any> | null> {
+    const models = [User, Mechanic, Admin] as Model<any>[];
+
+    for (const model of models) {
+      const document = await model.findById(id).exec();
+      if (document) return model;
     }
-    
+    return null;
+  }
+
 
   async findUserByEmail(email: string): Promise<UserDoc | null> {
     try {
@@ -264,7 +265,7 @@ class UserRepository {
 
   async createChat(senderId: string, receverId: string): Promise<any> {
     try {
-      let isChat:any = await Chat.find({
+      let isChat: any = await Chat.find({
         isGroupChat: false,
         $and: [
           { users: { $elemMatch: { $eq: senderId } } },
@@ -274,12 +275,12 @@ class UserRepository {
         .populate("users", "-password")
         .populate("latestMessage")
         .exec();
-  
+
       isChat = await User.populate(isChat, {
         path: "latestMessage.sender",
         select: "name email imageUrl",
       });
-  
+
       if (isChat.length > 0) {
         return isChat[0];
       } else {
@@ -288,13 +289,13 @@ class UserRepository {
           isGroupChat: false,
           users: [senderId, receverId],
         };
-  
+
         const createdChat = await Chat.create(chatData);
         const fullChat = await Chat.findOne({ _id: createdChat._id })
           .populate("users", "-password")
           .populate("latestMessage")
           .exec();
-  
+
         return fullChat;
       }
     } catch (error) {
@@ -303,9 +304,31 @@ class UserRepository {
     }
   }
 
+  async fetchPayment(id: string): Promise<any> {
+    try {
+      console.log("Fetching payment for user:", id);
+      
+      const paymentData = await Payment.find({ user: id })
+       .sort({ createdAt: -1 }) 
+      .populate({
+        path: 'mechanic', 
+        select: 'name _id email phone mechanicdataID'
+      })
+      .populate('services');
+  
+      console.log("fetchPayment", paymentData);
+      return paymentData;
+  
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      throw error; // Re-throw the error to handle it outside if needed
+    }
+  }
+  
+  
 
 
- 
+
 }
 
 export default UserRepository;
