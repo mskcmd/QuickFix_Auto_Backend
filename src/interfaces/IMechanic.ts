@@ -57,28 +57,36 @@ export interface UploadedFile {
 }
 
 export interface IService {
-  id:string;
+  id: string;
   name: string;
   details: string;
   price: string;
   fileUrl?: string; // fileUrl is optional
 }
 
+export interface IBlog {
+  id: string;
+  name: string;
+  positionName: string;
+  heading: string;
+  description: string;
+  fileUrl?: any; // fileUrl is optional
+}
 // models/ServiceOrder.ts
 
 export interface ServiceOrder {
-  gst: number;              
-  mechanic: any;         
-  name: string;            
-  services: string[];      
-  subtotal: number;        
-  total: number;            
-  user: any;             
-  vehicleNumber: string;    
+  gst: number;
+  mechanic: any;
+  name: string;
+  services: string[];
+  subtotal: number;
+  total: number;
+  user: any;
+  vehicleNumber: string;
   status?: "pending" | "completed" | "failed";
-  upiId?: string;           
-  bank?: string;            
-  createdAt?: Date;       
-  updatedAt?: Date;     
+  upiId?: string;
+  bank?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 

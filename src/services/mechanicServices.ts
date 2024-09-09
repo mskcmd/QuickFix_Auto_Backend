@@ -1,6 +1,6 @@
 import MechnicRepositories from "../repositories/mechanicRepositories";
 import OtpRepository from "../repositories/otpRepositories";
-import { IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
+import { IBlog, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import { sendVerifyMail } from "../utils/otpVerification";
 import bcrypt from "bcrypt";
 import { CreateJWT } from "../utils/generateToken";
@@ -246,6 +246,55 @@ class mechanicServices {
         } catch (error) {
             console.log(error);
 
+        }
+    }
+
+    async createBlog(blogData: IBlog): Promise<IBlog | null> {
+        try {
+            const result = await this.mechanicRepo.createBlog(blogData);
+            return result;
+        } catch (error) {
+            console.error("Error adding service:", error);
+            return null;
+        }
+    }
+
+    async fetchBlog(id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.fetchBlog(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async deleteBlog(id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.deleteBlog(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async fetchEditBlog(id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.fetchEditBlog(id)
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async editBlog(blogData: IBlog): Promise<IBlog | null> {
+        try {
+            const result = await this.mechanicRepo.editBlog(blogData);
+            return result;
+        } catch (error) {
+            console.error("Error adding service:", error);
+            return null;
         }
     }
 

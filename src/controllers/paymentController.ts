@@ -29,17 +29,23 @@ class PaymentController {
       }
     }
 
-    public async webhook(req: Request, res: Response): Promise<void> {
+    async webhook(req: Request, res: Response): Promise<void> {
+      console.log("Received webhook");
+      console.log('Request Body:', req.body.toString());
+      console.log('Stripe-Signature:', req.headers['stripe-signature']);
+      
       const sig = req.headers['stripe-signature'] as string;
   
       try {
-        await this.paymentService.processWebhook(req.body, sig);
-        res.status(200).send();
+          await this.paymentService.processWebhook(req.body, sig);
+          console.log('Webhook processed successfully');
+          res.status(200).send('Webhook received');
       } catch (error: any) {
-        console.error(`Webhook Error: ${error.message}`);
-        res.status(400).send(`Webhook Error: ${error.message}`);
+          console.error(`Webhook Error: ${error.message}`);
+          res.status(400).send(`Webhook Error: ${error.message}`);
       }
-    }
+  }
+  
 
 
     

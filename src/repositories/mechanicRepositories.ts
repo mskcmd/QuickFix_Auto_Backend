@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
+import { IBlog, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import Mechanic from "../models/mechanicModel";
 import MechanicData from "../models/mechanicdataModel";
 import { Types } from 'mongoose';
@@ -9,8 +9,10 @@ import bcrypt from 'bcrypt';
 import { deleteFileFromS3 } from "../middleware/s3UploadMiddleware";
 import Booking from "../models/mechanikBookingModel";
 import Payment from "../models/paymentModel";
+import Blog from "../models/blogModel";
 
 class mechanicRepositories {
+
     async findUserByEmail(email: string): Promise<MechnicDoc | null> {
         try {
             const userData: MechnicDoc | null = await Mechanic.findOne({ email }).exec();
@@ -360,7 +362,6 @@ class mechanicRepositories {
         }
     }
 
-
     async searchServices(keyword: string, mechanicId: String): Promise<any> {
         try {
             const services = await Service.find({ mechanic: mechanicId });
@@ -411,7 +412,116 @@ class mechanicRepositories {
         }
     }
 
+    async createBlog(blogData: IBlog): Promise<any> {
+        try {
+            const { id, name, positionName, heading, description, fileUrl } = blogData;
 
+            const newBlog = new Blog({
+                mechanic: id,
+                name: name,
+                positionName: positionName,
+                heading: heading,
+                description: description,
+                imageUrl: fileUrl
+            });
+            const savedBlog = await newBlog.save();
+            return { message: 'Blog added successfully', savedBlog }
+        } catch (error) {
+            console.error("Error in repository:", error);
+            const imageUrl: any = blogData.fileUrl;
+            try {
+                await deleteFileFromS3(imageUrl);
+            } catch (deleteError) {
+                console.error("Error deleting image from S3:", deleteError);
+            }
+
+            return null;
+        }
+    }
+
+    async fetchBlog(id: String): Promise<any> {
+        try {
+            const result = await Blog.find({ mechanic: id })
+            console.log(result);
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async deleteBlog(id: String): Promise<any> {
+        try {
+            console.log("id", id);
+            const result = await Blog.find({ _id: id })
+            console.log(result[0].imageUrl);
+            let img = result[0].imageUrl
+            await deleteFileFromS3(img);
+            const result1 = await Blog.deleteOne({ _id: id });
+            return result1
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async fetchEditBlog(id: String): Promise<any> {
+        try {
+            console.log("id", id);
+            const result = await Blog.find({ _id: id })
+            console.log("ssss", result);
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async editBlog(blogData: IBlog): Promise<any> {
+        try {
+            const { id, name, positionName, heading, description, fileUrl } = blogData;
+    
+            // Find the existing blog by ID
+            const existingBlog = await Blog.findById(id);
+            if (!existingBlog) {
+                return { message: 'Blog not found', savedBlog: null };
+            }
+    
+            // If the image URL is updated, delete the old image from S3
+            if (fileUrl && existingBlog.imageUrl && existingBlog.imageUrl !== fileUrl) {
+                try {
+                    await deleteFileFromS3(existingBlog.imageUrl);
+                } catch (deleteError) {
+                    console.error("Error deleting image from S3:", deleteError);
+                }
+            }
+    
+            // Update the blog data
+            existingBlog.name = name || existingBlog.name;
+            existingBlog.positionName = positionName || existingBlog.positionName;
+            existingBlog.heading = heading || existingBlog.heading;
+            existingBlog.description = description || existingBlog.description;
+            existingBlog.imageUrl = fileUrl || existingBlog.imageUrl;
+    
+            // Save the updated blog
+            const updatedBlog = await existingBlog.save();
+    
+            return { message: 'Blog updated successfully', updatedBlog };
+        } catch (error) {
+            console.error("Error in repository:", error);
+            
+            // Attempt to delete the image from S3 if an error occurs
+            const imageUrl: any = blogData.fileUrl;
+            try {
+                await deleteFileFromS3(imageUrl);
+            } catch (deleteError) {
+                console.error("Error deleting image from S3:", deleteError);
+            }
+    
+            return null;
+        }
+    }
+    
 
 
 

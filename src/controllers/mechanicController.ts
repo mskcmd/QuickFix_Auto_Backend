@@ -1,5 +1,5 @@
 import { log } from "util";
-import { IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
+import { IBlog, IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
 import MechanicServices from "../services/mechanicServices";
 import { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
@@ -360,7 +360,6 @@ class mechanicController {
 
   async searchServices(req: Request, res: Response): Promise<void> {
     try {
-      console.log("hauij");
       const id = req.query.id as string;
       const keyword = req.query.search as string;
       const result = await this.mechanicServices.searchServices(keyword, id)
@@ -370,6 +369,7 @@ class mechanicController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
   async createBill(req: Request, res: Response): Promise<void> {
     try {
       console.log("bill", req.body);
@@ -385,10 +385,87 @@ class mechanicController {
         mechId
       } = req.body;
 
-      const result = await this.mechanicServices.createBill(userId,name,vehicleNumber,services,subtotal,gst,total,mechId)
-     
+      const result = await this.mechanicServices.createBill(userId, name, vehicleNumber, services, subtotal, gst, total, mechId)
+
     } catch (error) {
       console.log("Error:", error);
+    }
+  }
+
+  async createBlog(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, name, positionName, heading, description } = req.body;
+
+      let fileUrl: string | undefined;
+
+      if (req.file) {
+        fileUrl = await uploadFile(req.file);
+      }
+
+      const blogData: IBlog = {
+        id, name, positionName, heading, description, fileUrl,
+      };
+
+      const result = await this.mechanicServices.createBlog(blogData);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error adding service:", error);
+      res.status(500).json({ message: 'Failed to add service', error });
+    }
+  }
+
+  async fetchBlog(req: Request, res: Response): Promise<any> {
+    try {
+      const id = req.query.id as string;
+      const result = await this.mechanicServices.fetchBlog(id)
+      res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async deleteBlog(req: Request, res: Response): Promise<any> {
+    try {
+      const id = req.query.id as string;
+      const result = await this.mechanicServices.deleteBlog(id)
+      res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async fetchEditBlog(req: Request, res: Response): Promise<any> {
+    try {
+      const id = req.query.id as string;
+      const result = await this.mechanicServices.fetchEditBlog(id)
+      res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async editBlog(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, name, positionName, heading, description, image } = req.body;
+      console.log("tyu", id, name, positionName, heading, description, image, req.file);
+      
+      let fileUrl: string | undefined;
+
+      if (req.file) {
+        fileUrl = await uploadFile(req.file);
+      } else {
+        fileUrl = image
+      }
+
+      const blogData: IBlog = {
+        id, name, positionName, heading, description, fileUrl,
+      };
+
+      const result = await this.mechanicServices.editBlog(blogData);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error adding service:", error);
+      res.status(500).json({ message: 'Failed to add service', error });
     }
   }
 

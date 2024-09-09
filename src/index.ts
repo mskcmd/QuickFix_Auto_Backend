@@ -171,7 +171,6 @@ import { errorHandler, notFound } from './middleware/errorMiddleware';
 import cookieParser from 'cookie-parser';
 import bodyParser from "body-parser"
 
-
 require('dotenv').config();
 
 const app = express();

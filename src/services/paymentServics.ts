@@ -22,6 +22,8 @@ class PaymentService {
     let event: Stripe.Event;
 
     try {
+      console.log("endpointSecret",endpointSecret);
+      
       // Verify the webhook signature and construct the event
       event = stripeClient.webhooks.constructEvent(payload, signature, endpointSecret);
     } catch (err: any) {
