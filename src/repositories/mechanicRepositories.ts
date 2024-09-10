@@ -522,6 +522,23 @@ class mechanicRepositories {
         }
     }
     
+    async paymentFetch(id: String): Promise<any> {
+        try {
+            const paymentData = await Payment.find({ mechanic: id })
+            .sort({ createdAt: -1 }) 
+           .populate({
+             path: 'user', 
+             select: 'name _id email phone '
+           })
+           .populate('services');
+       
+           console.log("fetchPayment", paymentData);
+           return paymentData;
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
 
 
 

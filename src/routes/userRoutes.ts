@@ -40,6 +40,9 @@ userRoute.post("/webhook",
     paymentController.webhook.bind(paymentController)
 );
 
+userRoute.post("/update-payment-status", userController.updatePayment.bind(userController))
+
+
 
 
 export default userRoute

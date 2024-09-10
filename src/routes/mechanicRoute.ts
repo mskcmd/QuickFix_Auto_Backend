@@ -28,6 +28,7 @@ mechanicRoute.get("/fetchBlog", mechanicController.fetchBlog.bind(mechanicContro
 mechanicRoute.delete("/deleteBlog", mechanicController.deleteBlog.bind(mechanicController))
 mechanicRoute.get("/fetchEditBlog", mechanicController.fetchEditBlog.bind(mechanicController))
 mechanicRoute.post("/editBlog", uploadSingleImage, mechanicController.editBlog.bind(mechanicController))
+mechanicRoute.get("/paymentFetch", mechanicController.paymentFetch.bind(mechanicController))
 
 
 

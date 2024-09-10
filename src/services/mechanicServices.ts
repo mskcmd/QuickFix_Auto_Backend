@@ -298,6 +298,16 @@ class mechanicServices {
         }
     }
 
+    async paymentFetch(id: string): Promise<void> {
+        try {
+            const result = await this.mechanicRepo.paymentFetch(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 
 
 }

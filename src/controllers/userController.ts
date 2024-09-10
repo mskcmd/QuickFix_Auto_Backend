@@ -9,6 +9,7 @@ import User from "../models/userModel";
 import Message from "../models/messageModel";
 import Mechanic from "../models/mechanicModel";
 import mongoose from "mongoose";
+import Payment from "../models/paymentModel";
 
 class UserController {
   private userService: UserServices;
@@ -490,11 +491,35 @@ class UserController {
       const id: any = req.query.id
       const result = await this.userService.fetchPayment(id)
       console.log(result);
-       res.json(result)
+      res.json(result)
     } catch (error) {
       console.log(error);
     }
   }
+
+  async updatePayment(req: Request, res: Response): Promise<any> {
+    try {
+      
+      const { paymentId, status } = req.body;
+
+      const result = await Payment.findOneAndUpdate(
+        { _id: paymentId, status: "pending" },  
+        { status: status},        
+        { new: true }                  
+      );
+
+      if (!result) {
+        return res.status(404).json({ message: "Payment not found or already completed" });
+      }
+
+      console.log(result);
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "An error occurred" });
+    }
+  }
+
 
 
 

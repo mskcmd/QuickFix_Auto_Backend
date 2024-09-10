@@ -469,6 +469,16 @@ class mechanicController {
     }
   }
 
+  async paymentFetch(req: Request, res: Response): Promise<any> {
+    try {
+      const id = req.query.id as string;
+      const result = await this.mechanicServices.paymentFetch(id)
+      res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
 
 }
 
