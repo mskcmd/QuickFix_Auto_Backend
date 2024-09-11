@@ -29,6 +29,16 @@ class UserServices {
         }
     }
 
+    async checkgoogleEmail(email: string): Promise<any> {
+        try {
+            const userData: any | null = await this.userRepo.findUserByEmail(email);
+            return userData;
+        } catch (error) {
+            console.error("Error in checkExistingEmail:", error);
+            throw new Error("Failed to check existing email. Please try again later.");
+        }
+    }
+
     async checkExistingUser(userId: string) {
         try {
             const userData: UserDoc | null = await this.userRepo.findUserById(userId);
@@ -71,6 +81,69 @@ class UserServices {
         const result = await this.otpRepo.verifyUser(userId)
         console.log("myyyyy", result)
         return { status: true, result, message: 'successful' };
+    }
+
+    async googleToken(result: any) {
+        try {
+            console.log("result", result);
+
+            if (result) {
+                const token = this.createjwt.generateToken(result?.newUser?._id);
+                const refreshToken = this.createjwt.generateRefreshToken(result?.newUser?._id)
+                return {
+                    data: {
+                        data: {
+                            succuss: true,
+                            message: 'Authentication Successful !',
+                            data: result?.newUser,
+                            userId: result?.newUser?._id,
+                            token: token,
+                            refreshToken: refreshToken
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error during Google authentication:', error);
+        }
+    }
+
+    async googleTokenlogin(result: any) {
+        try {
+            console.log("result", result);
+
+            if (result) {
+                const token = this.createjwt.generateToken(result?._id);
+                const refreshToken = this.createjwt.generateRefreshToken(result?._id)
+                return {
+                    data: {
+                        data: {
+                            succuss: true,
+                            message: 'Authentication Successful !',
+                            data: result,
+                            userId: result?._id,
+                            token: token,
+                            refreshToken: refreshToken
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error during Google authentication:', error);
+        }
+    }
+
+    async googleVerified(userId: string) {
+        try {
+            const userData: any = await this.userRepo.googleVerified(userId);
+            if (!userData) {
+                throw new Error("User not found");
+            }
+            return userData;
+        } catch (error) {
+            console.error("Error in checkExistingEmail:", error);
+            throw new Error("Failed to check existing email. Please try again later.");
+        }
     }
 
     async login(email: string, password: string) {

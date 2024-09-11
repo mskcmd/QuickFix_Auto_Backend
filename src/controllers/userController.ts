@@ -8,7 +8,7 @@ import Chat from "../models/chatModel";
 import User from "../models/userModel";
 import Message from "../models/messageModel";
 import Mechanic from "../models/mechanicModel";
-import mongoose from "mongoose";
+import bcrypt from "bcrypt"
 import Payment from "../models/paymentModel";
 
 class UserController {
@@ -94,8 +94,6 @@ class UserController {
   }
 
   async login(req: Request, res: Response): Promise<void> {
-    console.log("ha");
-
     try {
       const { email, password } = req.body;
       console.log(email, password);
@@ -136,6 +134,75 @@ class UserController {
       res
         .status(500)
         .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async googlelogin(req: Request, res: Response): Promise<void> {
+    const { name, email, googlePhotoUrl } = req.body
+    const accessTokenMaxAge = 60 * 60 * 1000;
+    const refreshTokenMaxAge = 48 * 60 * 60 * 1000;
+    try {
+      const user: any = await this.userService.checkgoogleEmail(email);
+      if (user) {
+        if (user.isBlocked) {
+          res.json({ status: false, message: "User not found." })
+        } else {
+          console.log("use", user);
+          console.log("id", user._id);
+          const result: any = await this.userService.googleTokenlogin(user);
+          console.log("tokenr", result);
+          const access_token = result?.data?.data?.token;
+          const refresh_token = result?.data?.data?.refreshToken;
+          res
+            .status(200)
+            .cookie("access_token", access_token, {
+              maxAge: accessTokenMaxAge,
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+            })
+            .cookie("refresh_token", refresh_token, {
+              maxAge: refreshTokenMaxAge,
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+            })
+            .json({ success: true, data: result.data });
+        }
+      } else {
+        var randomIndianPhoneNumber: any = '9' + Math.floor(100000000 + Math.random() * 900000000);
+        var password = Math.random().toString(36).slice(-4) + Math.random().toString(36).toUpperCase().slice(-4);
+        const result1 = await this.userService.createUser(
+          name,
+          email,
+          randomIndianPhoneNumber,
+          password
+        );
+        const id: any = result1?.newUser?._id
+        const isVerified: any = await this.userService.googleVerified(id);
+        if (isVerified) {
+          const result: any = await this.userService.googleToken(result1);
+          const access_token = result?.data?.data?.token;
+          const refresh_token = result?.data?.data?.refreshToken;
+          res
+            .status(200)
+            .cookie("access_token", access_token, {
+              maxAge: accessTokenMaxAge,
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+            })
+            .cookie("refresh_token", refresh_token, {
+              maxAge: refreshTokenMaxAge,
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+            })
+            .json({ success: true, data: result?.data });
+        }
+      }
+    } catch (error) {
+
     }
   }
 
@@ -499,13 +566,13 @@ class UserController {
 
   async updatePayment(req: Request, res: Response): Promise<any> {
     try {
-      
+
       const { paymentId, status } = req.body;
 
       const result = await Payment.findOneAndUpdate(
-        { _id: paymentId, status: "pending" },  
-        { status: status},        
-        { new: true }                  
+        { _id: paymentId, status: "pending" },
+        { status: status },
+        { new: true }
       );
 
       if (!result) {

@@ -29,16 +29,28 @@ class UserRepository {
 
   async findUserByEmail(email: string): Promise<UserDoc | null> {
     try {
-      console.log("hh", email);
-
       const userData: UserDoc | null = await User.findOne({ email }).exec();
-      console.log("ff", userData);
       return userData;
     } catch (error) {
       console.error("Error in findUserByEmail:", error);
       throw error;
     }
   }
+
+  async googleVerified(id: string): Promise<any> {
+    try {
+      const result = await User.updateOne(
+        { _id: id },
+        { $set: { isVerified: true } }
+      );
+      return result;
+
+    } catch (error) {
+      console.error("Error in googleVerified:", error);
+      throw error;
+    }
+  }
+
 
   async findUserById(userId: string): Promise<UserDoc | null> {
     try {
@@ -74,7 +86,6 @@ class UserRepository {
         return { isVerified: false, message: "User not verified." };
       }
 
-      // Find the user with the password field included for comparison
       const userWithPassword = await User.findOne({ email }).select('+password');
       if (!userWithPassword) {
         return { status: false, message: "User not found for password validation." };
@@ -118,7 +129,6 @@ class UserRepository {
       throw error;
     }
   }
-
 
 
   async findMechanicsNearLocation(lat: number, lon: number, type: string, maxDistance: number = 5000) {
@@ -307,25 +317,25 @@ class UserRepository {
   async fetchPayment(id: string): Promise<any> {
     try {
       console.log("Fetching payment for user:", id);
-      
+
       const paymentData = await Payment.find({ user: id })
-       .sort({ createdAt: -1 }) 
-      .populate({
-        path: 'mechanic', 
-        select: 'name _id email phone mechanicdataID'
-      })
-      .populate('services');
-  
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'mechanic',
+          select: 'name _id email phone mechanicdataID'
+        })
+        .populate('services');
+
       console.log("fetchPayment", paymentData);
       return paymentData;
-  
+
     } catch (error) {
       console.error("Error fetching payments:", error);
       throw error; // Re-throw the error to handle it outside if needed
     }
   }
-  
-  
+
+
 
 
 
