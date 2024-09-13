@@ -259,6 +259,26 @@ class UserServices {
         }
     }
 
+    async feedback(rating: number, feedback: string, userId: string, mechId: string, paymentID: string): Promise<any> {
+        try {
+            console.log(rating, feedback, userId, mechId);
+            const result = await this.userRepo.feedback(rating, feedback, userId, mechId,paymentID)
+            return result
+        } catch (error) {
+
+        }
+    }
+
+    async feedBackCheck(id: string): Promise<any> {
+        try {
+            const result = this.userRepo.feedBackCheck(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 
 
 }

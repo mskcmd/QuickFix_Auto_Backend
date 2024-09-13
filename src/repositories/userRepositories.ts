@@ -10,6 +10,7 @@ import Mechanic from "../models/mechanicModel";
 import { MechnicDoc } from "../interfaces/IMechanic";
 import Chat from "../models/chatModel";
 import Payment from "../models/paymentModel";
+import FeedBack from "../models/feedbackModel";
 
 
 class UserRepository {
@@ -336,7 +337,39 @@ class UserRepository {
   }
 
 
+  async feedback(rating: number, feedbackText: string, userId: string, mechId: string, paymentID: string) {
+    try {
+      const newFeedback = new FeedBack({
+        rating,
+        feedback: feedbackText,
+        user: userId,
+        mechanic: mechId,
+        payment:paymentID
+      });
+      const result = await newFeedback.save();
+      return result;
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      throw error;
+    }
+  }
 
+  async feedBackCheck(id: string): Promise<any> {
+    try {
+      console.log("Fetching feedback for user:", id);
+            const feedback = await FeedBack.find({ payment: id });
+  
+      if (feedback.length > 0) {
+        return {status:true,feedback };
+      } else {
+        return {status:false, message: "No feedback found for this user." };
+      }
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      throw error;
+    }
+  }
+  
 
 
 }

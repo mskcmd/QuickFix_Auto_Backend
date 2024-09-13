@@ -587,6 +587,41 @@ class UserController {
     }
   }
 
+  async feedBack(req: Request, res: Response): Promise<any> {
+    try {
+      console.log(req.body);
+
+      const { values, id, mechId, paymentId } = req.body;
+      const { rating, feedback } = values; 
+
+      if (!rating || !feedback || !id || !mechId) {
+        throw new Error("One or more required fields are empty.");
+      }
+      const result = await this.userService.feedback(rating, feedback, id, mechId, paymentId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ message: "Error submitting feedback" });
+    }
+  }
+  
+  async feedBackCheck(req: Request, res: Response): Promise<void> {
+    const id = req.query.id as string;
+    console.log(id);
+    try {
+      if (!id) {
+        res.status(400).json({ error: "ID and type are required" });
+        return;
+      }
+      const response = await this.userService.feedBackCheck(id);
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("Error fetching book data:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+
 
 
 
