@@ -262,7 +262,7 @@ class UserServices {
     async feedback(rating: number, feedback: string, userId: string, mechId: string, paymentID: string): Promise<any> {
         try {
             console.log(rating, feedback, userId, mechId);
-            const result = await this.userRepo.feedback(rating, feedback, userId, mechId,paymentID)
+            const result = await this.userRepo.feedback(rating, feedback, userId, mechId, paymentID)
             return result
         } catch (error) {
 
@@ -278,6 +278,25 @@ class UserServices {
 
         }
     }
+
+    async fetchBlogs(): Promise<any> {
+        try {
+            const response = await this.userRepo.fetchBlogs()
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async fetchAllBlogs(): Promise<any> {
+        try {
+            const response = await this.userRepo.fetchAllBlogs()
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    
 
 
 

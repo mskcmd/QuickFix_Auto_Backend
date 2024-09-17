@@ -592,7 +592,7 @@ class UserController {
       console.log(req.body);
 
       const { values, id, mechId, paymentId } = req.body;
-      const { rating, feedback } = values; 
+      const { rating, feedback } = values;
 
       if (!rating || !feedback || !id || !mechId) {
         throw new Error("One or more required fields are empty.");
@@ -604,7 +604,7 @@ class UserController {
       res.status(500).json({ message: "Error submitting feedback" });
     }
   }
-  
+
   async feedBackCheck(req: Request, res: Response): Promise<void> {
     const id = req.query.id as string;
     console.log(id);
@@ -620,6 +620,27 @@ class UserController {
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
+
+  async fetchBlogs(req: Request, res: Response): Promise<void> {
+    try {
+      const response = await this.userService.fetchBlogs();
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching blogs:', error); 
+      res.status(500).json({ message: 'Failed to fetch blogs' });
+    }
+  }
+
+  async fetchAllBlogs(req: Request, res: Response): Promise<void> {
+    try {
+      const response = await this.userService.fetchAllBlogs();
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching blogs:', error); 
+      res.status(500).json({ message: 'Failed to fetch blogs' });
+    }
+  }
+
 
 
 

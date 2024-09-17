@@ -11,6 +11,7 @@ import { MechnicDoc } from "../interfaces/IMechanic";
 import Chat from "../models/chatModel";
 import Payment from "../models/paymentModel";
 import FeedBack from "../models/feedbackModel";
+import Blog from "../models/blogModel";
 
 
 class UserRepository {
@@ -344,7 +345,7 @@ class UserRepository {
         feedback: feedbackText,
         user: userId,
         mechanic: mechId,
-        payment:paymentID
+        payment: paymentID
       });
       const result = await newFeedback.save();
       return result;
@@ -357,19 +358,42 @@ class UserRepository {
   async feedBackCheck(id: string): Promise<any> {
     try {
       console.log("Fetching feedback for user:", id);
-            const feedback = await FeedBack.find({ payment: id });
-  
+      const feedback = await FeedBack.find({ payment: id });
+
       if (feedback.length > 0) {
-        return {status:true,feedback };
+        return { status: true, feedback };
       } else {
-        return {status:false, message: "No feedback found for this user." };
+        return { status: false, message: "No feedback found for this user." };
       }
     } catch (error) {
       console.error("Error fetching feedback:", error);
       throw error;
     }
   }
-  
+
+  async fetchBlogs(): Promise<any> {
+    try {
+      const response = await Blog.find();
+      const shuffledBlogs = response.sort(() => 0.5 - Math.random());
+      const randomBlogs = shuffledBlogs.slice(0, 3);
+      console.log("Random Blogs:", randomBlogs);
+      return randomBlogs
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async fetchAllBlogs(): Promise<any> {
+    try {
+      const response = await Blog.find();
+      console.log("Random Blogs:", response);
+      return response
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 
 
 }
