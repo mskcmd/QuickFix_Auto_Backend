@@ -1,7 +1,7 @@
 import { log } from "util";
 import { IBlog, IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
 import MechanicServices from "../services/mechanicServices";
-import { Request, Response } from "express"
+import e, { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
 import MechanicData from "../models/mechanicdataModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
@@ -448,7 +448,7 @@ class mechanicController {
     try {
       const { id, name, positionName, heading, description, image } = req.body;
       console.log("tyu", id, name, positionName, heading, description, image, req.file);
-      
+
       let fileUrl: string | undefined;
 
       if (req.file) {
@@ -474,6 +474,67 @@ class mechanicController {
       const id = req.query.id as string;
       const result = await this.mechanicServices.paymentFetch(id)
       res.status(201).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async allUsers(req: Request, res: Response): Promise<void> {
+    try {
+      console.log(req.query.search);
+
+      const keyword = req.query.search
+        ? {
+          $or: [
+            { name: { $regex: req.query.search as string, $options: "i" } },
+            { email: { $regex: req.query.search as string, $options: "i" } },
+          ],
+        }
+        : {};
+
+      let users: any
+      users = await User.find(keyword)
+      console.log("users", users);
+      res.json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
+
+  async createChat(req: Request, res: Response): Promise<void> {
+    try {
+      const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
+      console.log(senderId, receiverId);
+
+      if (!senderId || !receiverId) {
+        console.log("UserId or receverId param not sent with request");
+        res.sendStatus(400);
+        return;
+      }
+      const response = await this.mechanicServices.createChat(senderId, receiverId);
+      if (response) {
+        res.status(200).send(response);
+      } else {
+        res.status(404).send("Chat not found");
+      }
+    } catch (error) {
+      console.log(error);
+
+    }
+  }
+
+  async sendMessage(req: Request, res: Response): Promise<any> {
+    try {
+      const { content, chatId, senderId } = req.body;
+      console.log("Suahil", content, chatId, senderId);
+
+      if (!content || !chatId) {
+        console.log("Invalid data passed into request");
+        return res.sendStatus(400);
+      }
+      const result = await this.mechanicServices.sendMessage(content, chatId, senderId)
+      res.json(result);
     } catch (error) {
       console.log(error);
     }

@@ -308,6 +308,8 @@ class UserRepository {
           .populate("latestMessage")
           .exec();
 
+
+
         return fullChat;
       }
     } catch (error) {
@@ -336,7 +338,6 @@ class UserRepository {
       throw error; // Re-throw the error to handle it outside if needed
     }
   }
-
 
   async feedback(rating: number, feedbackText: string, userId: string, mechId: string, paymentID: string) {
     try {
@@ -392,10 +393,6 @@ class UserRepository {
       console.log(error);
     }
   }
-
-
-
-
 }
 
 export default UserRepository;

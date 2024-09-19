@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
-import { IBlog, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
+import { IBlog, IChat, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import Mechanic from "../models/mechanicModel";
 import MechanicData from "../models/mechanicdataModel";
 import { Types } from 'mongoose';
 import Service from "../models/serviceModel";
-
+import Chat2 from "../models/chatModel2";
 import bcrypt from 'bcrypt';
 import { deleteFileFromS3 } from "../middleware/s3UploadMiddleware";
 import Booking from "../models/mechanikBookingModel";
 import Payment from "../models/paymentModel";
 import Blog from "../models/blogModel";
+import Message from '../models/messageModel2';
 
 class mechanicRepositories {
 
@@ -480,13 +481,13 @@ class mechanicRepositories {
     async editBlog(blogData: IBlog): Promise<any> {
         try {
             const { id, name, positionName, heading, description, fileUrl } = blogData;
-    
+
             // Find the existing blog by ID
             const existingBlog = await Blog.findById(id);
             if (!existingBlog) {
                 return { message: 'Blog not found', savedBlog: null };
             }
-    
+
             // If the image URL is updated, delete the old image from S3
             if (fileUrl && existingBlog.imageUrl && existingBlog.imageUrl !== fileUrl) {
                 try {
@@ -495,21 +496,21 @@ class mechanicRepositories {
                     console.error("Error deleting image from S3:", deleteError);
                 }
             }
-    
+
             // Update the blog data
             existingBlog.name = name || existingBlog.name;
             existingBlog.positionName = positionName || existingBlog.positionName;
             existingBlog.heading = heading || existingBlog.heading;
             existingBlog.description = description || existingBlog.description;
             existingBlog.imageUrl = fileUrl || existingBlog.imageUrl;
-    
+
             // Save the updated blog
             const updatedBlog = await existingBlog.save();
-    
+
             return { message: 'Blog updated successfully', updatedBlog };
         } catch (error) {
             console.error("Error in repository:", error);
-            
+
             // Attempt to delete the image from S3 if an error occurs
             const imageUrl: any = blogData.fileUrl;
             try {
@@ -517,29 +518,263 @@ class mechanicRepositories {
             } catch (deleteError) {
                 console.error("Error deleting image from S3:", deleteError);
             }
-    
+
             return null;
         }
     }
-    
+
     async paymentFetch(id: String): Promise<any> {
         try {
             const paymentData = await Payment.find({ mechanic: id })
-            .sort({ createdAt: -1 }) 
-           .populate({
-             path: 'user', 
-             select: 'name _id email phone '
-           })
-           .populate('services');
-       
-           console.log("fetchPayment", paymentData);
-           return paymentData;
+                .sort({ createdAt: -1 })
+                .populate({
+                    path: 'user',
+                    select: 'name _id email phone '
+                })
+                .populate('services');
+
+            console.log("fetchPayment", paymentData);
+            return paymentData;
         } catch (error) {
             console.log(error);
 
         }
     }
 
+    async createChat(senderId: any, receiverId: any): Promise<any> {
+        try {
+            console.log("lok", senderId, receiverId);
+
+            let chat: any | null = await Chat2.findOne({
+                users: { $all: [senderId, receiverId] },
+            });
+
+            // If chat exists, aggregate and return it
+            if (chat) {
+                const populatedChat = await Chat2.aggregate([
+                    { $match: { _id: chat._id } },
+                    {
+                        $lookup: {
+                            from: "users", // Collection name for users
+                            localField: "users",
+                            foreignField: "_id",
+                            as: "userDetails",
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "mechanics", // Collection name for mechanics
+                            localField: "users",
+                            foreignField: "_id",
+                            as: "mechanicDetails",
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            isGroupChat: 1,
+                            users: 1,
+                            userDetails: 1,
+                            mechanicDetails: 1,
+                            createdAt: 1,
+                            updatedAt: 1,
+                        },
+                    },
+                ]);
+                console.log("Return the first result", populatedChat[0]);
+                return populatedChat[0]; // Return the first result
+            }
+
+            // If chat does not exist, create a new chat
+            const newChat = new Chat2({
+                users: [senderId, receiverId],
+                isGroupChat: false,
+            });
+
+            chat = await newChat.save();
+
+            // Aggregate user details after creating the new chat
+            const populatedNewChat = await Chat2.aggregate([
+                { $match: { _id: chat._id } },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "users",
+                        foreignField: "_id",
+                        as: "userDetails",
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "mechanics",
+                        localField: "users",
+                        foreignField: "_id",
+                        as: "mechanicDetails",
+                    },
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        isGroupChat: 1,
+                        users: 1,
+                        userDetails: 1,
+                        mechanicDetails: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                    },
+                },
+            ]);
+
+            console.log(populatedNewChat[0]);
+
+            return populatedNewChat[0]; // Return the first result
+        } catch (error) {
+            console.error("Error in repository:", error);
+        }
+    }
+
+    // async sendMessage(content: string, chatId: string, senderId: string) {
+    //     try {
+    //         console.log("Sending message:", content, chatId, senderId);
+
+    //         // Create the new message
+    //         let newMessage: any = await Message.create({
+    //             sender: senderId,
+    //             content: content,
+    //             chat: chatId,
+    //         });
+
+    //         console.log("New message created:", newMessage);
+
+    //         // Update the latest message in the chat
+    //         await Chat2.findByIdAndUpdate(chatId, {
+    //             latestMessage: newMessage._id,
+    //         });
+
+    //         // Find the newly created message and populate sender and chat data using aggregation
+    //         let populatedMessage = await Message.aggregate([
+    //             {
+    //                 $match: {
+    //                     _id: newMessage._id,
+    //                 },
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: "mechanics", // Database/collection for mechanics (sender)
+    //                     localField: "sender",
+    //                     foreignField: "_id",
+    //                     as: "senderInfo", // Populate sender data
+    //                 },
+    //             },
+    //             {
+    //                 $unwind: "$senderInfo", // Unwind sender data if it's an array
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: "chats", // Database/collection for chats
+    //                     localField: "chat",
+    //                     foreignField: "_id",
+    //                     as: "chatInfo", // Populate chat data
+    //                 },
+    //             },
+    //             {
+    //                 $unwind: "$chatInfo", // Unwind chat data if it's an array
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: "users", // Users collection to populate user and mechanic
+    //                     localField: "chatInfo.users",
+    //                     foreignField: "_id",
+    //                     as: "chatInfo.usersDetails", // Populate user and mechanic details
+    //                 },
+    //             },
+    //         ]);
+
+    //         console.log("Populated message:", populatedMessage);
+
+    //         return populatedMessage; // Return the populated message document
+    //     } catch (error) {
+    //         console.error("Error in sendMessage:", error);
+    //         throw error;
+    //     }
+    // }
+
+    async sendMessage(content: string, chatId: string, senderId: string) {
+        try {
+            console.log("Sending message:", content, chatId, senderId);
+    
+            // Create the new message
+            let newMessage: any = await Message.create({
+                sender: senderId,
+                content: content,
+                chat: chatId,
+            });
+    
+            console.log("New message created:", newMessage);
+    
+            // Update the latest message in the chat
+            await Chat2.findByIdAndUpdate(chatId, {
+                latestMessage: newMessage._id,
+            });
+    
+            // Find the newly created message and populate sender and chat data using aggregation
+            let populatedMessage = await Message.aggregate([
+                {
+                    $match: {
+                        _id: newMessage._id,
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "mechanics", // Database/collection for mechanics (sender)
+                        localField: "sender",
+                        foreignField: "_id",
+                        as: "senderInfo", // Populate sender data
+                    },
+                },
+                {
+                    $unwind: "$senderInfo", // Unwind sender data
+                },
+                {
+                    $lookup: {
+                        from: "chats", // Database/collection for chats
+                        localField: "chat",
+                        foreignField: "_id",
+                        as: "chatInfo", // Populate chat data
+                    },
+                },
+                {
+                    $unwind: "$chatInfo", // Unwind chat data
+                },
+                {
+                    $lookup: {
+                        from: "users", // Users collection to populate user and mechanic
+                        localField: "chatInfo.users",
+                        foreignField: "_id",
+                        as: "chatInfo.usersDetails", // Populate user and mechanic details
+                    },
+                },
+                // Project to exclude sensitive fields
+                {
+                    $project: {
+                        "senderInfo.password": 0,
+                        "senderInfo.isBlocked": 0,
+                        "chatInfo.usersDetails.password": 0,
+                        "chatInfo.usersDetails.isBlocked": 0,
+                        "chatInfo.usersDetails.isUser": 0, // Add more if needed
+                    }
+                }
+            ]);
+    
+            console.log("Populated message:", populatedMessage);
+    
+            return populatedMessage[0]; // Return the populated message document without sensitive data
+        } catch (error) {
+            console.error("Error in sendMessage:", error);
+            throw error;
+        }
+    }
+    
 
 
 }

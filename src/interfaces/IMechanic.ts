@@ -90,3 +90,11 @@ export interface ServiceOrder {
   updatedAt?: Date;
 }
 
+export interface IChat {
+  _id: string;
+  users: string[];
+  isGroupChat: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+

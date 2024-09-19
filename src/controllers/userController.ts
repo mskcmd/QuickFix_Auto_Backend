@@ -439,6 +439,7 @@ class UserController {
       }
 
       const response = await this.userService.createChat(senderId, receiverId);
+      
       if (response) {
         res.status(200).send(response);
       } else {
@@ -466,7 +467,11 @@ class UserController {
         select: "name email imageUrl",
       });
 
+      console.log("vv",chats);
+      
+
       res.status(200).send(chats);
+      return
     } catch (error) {
       console.error(error);
       res.status(500).send({ message: "Failed to fetch chats" });

@@ -30,6 +30,9 @@ mechanicRoute.get("/fetchEditBlog", mechanicController.fetchEditBlog.bind(mechan
 mechanicRoute.post("/editBlog", uploadSingleImage, mechanicController.editBlog.bind(mechanicController))
 mechanicRoute.get("/paymentFetch", mechanicController.paymentFetch.bind(mechanicController))
 
+mechanicRoute.get("/usersdata", mechanicController.allUsers.bind(mechanicController))
+mechanicRoute.post("/create", mechanicController.createChat.bind(mechanicController))
+mechanicRoute.post("/sendMessage", mechanicController.sendMessage.bind(mechanicController))
 
 
 

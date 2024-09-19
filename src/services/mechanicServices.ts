@@ -308,6 +308,26 @@ class mechanicServices {
         }
     }
 
+    async createChat(senderId: string, receverId: string): Promise<any> {
+        try {
+            const chat = await this.mechanicRepo.createChat(senderId, receverId);
+            return chat;
+        } catch (error) {
+            console.error("Error in service:", error);
+            throw error;
+        }
+    }
+
+    async sendMessage(content: string, chatId: string, senderId: string) {
+        try {
+            const result = await this.mechanicRepo.sendMessage( content, chatId, senderId )
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 
 
 }
