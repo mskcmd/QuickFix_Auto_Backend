@@ -12,6 +12,8 @@ import Chat from "../models/chatModel";
 import Payment from "../models/paymentModel";
 import FeedBack from "../models/feedbackModel";
 import Blog from "../models/blogModel";
+import Chat2 from "../models/chatModel2";
+import Message from '../models/messageModel2';
 
 
 class UserRepository {
@@ -275,52 +277,8 @@ class UserRepository {
     }
   }
 
-  async createChat(senderId: string, receverId: string): Promise<any> {
-    try {
-      let isChat: any = await Chat.find({
-        isGroupChat: false,
-        $and: [
-          { users: { $elemMatch: { $eq: senderId } } },
-          { users: { $elemMatch: { $eq: receverId } } },
-        ],
-      })
-        .populate("users", "-password")
-        .populate("latestMessage")
-        .exec();
-
-      isChat = await User.populate(isChat, {
-        path: "latestMessage.sender",
-        select: "name email imageUrl",
-      });
-
-      if (isChat.length > 0) {
-        return isChat[0];
-      } else {
-        const chatData = {
-          chatName: "sender",
-          isGroupChat: false,
-          users: [senderId, receverId],
-        };
-
-        const createdChat = await Chat.create(chatData);
-        const fullChat = await Chat.findOne({ _id: createdChat._id })
-          .populate("users", "-password")
-          .populate("latestMessage")
-          .exec();
-
-
-
-        return fullChat;
-      }
-    } catch (error) {
-      console.error("Error in repository:", error);
-      throw new Error("Failed to create or retrieve chat");
-    }
-  }
-
   async fetchPayment(id: string): Promise<any> {
     try {
-      console.log("Fetching payment for user:", id);
 
       const paymentData = await Payment.find({ user: id })
         .sort({ createdAt: -1 })
@@ -358,7 +316,6 @@ class UserRepository {
 
   async feedBackCheck(id: string): Promise<any> {
     try {
-      console.log("Fetching feedback for user:", id);
       const feedback = await FeedBack.find({ payment: id });
 
       if (feedback.length > 0) {
@@ -377,7 +334,6 @@ class UserRepository {
       const response = await Blog.find();
       const shuffledBlogs = response.sort(() => 0.5 - Math.random());
       const randomBlogs = shuffledBlogs.slice(0, 3);
-      console.log("Random Blogs:", randomBlogs);
       return randomBlogs
     } catch (error) {
       console.log(error);
@@ -387,12 +343,288 @@ class UserRepository {
   async fetchAllBlogs(): Promise<any> {
     try {
       const response = await Blog.find();
-      console.log("Random Blogs:", response);
       return response
     } catch (error) {
       console.log(error);
     }
   }
+
+  //chat
+
+  async allUsers(keyword: string): Promise<any> {
+    try {
+      const searchQuery = keyword
+        ? {
+          $or: [
+            { name: { $regex: keyword, $options: "i" } },
+            { email: { $regex: keyword, $options: "i" } },
+          ],
+        }
+        : {};
+
+      const users = await Mechanic.find(searchQuery);
+      return users;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async createChat(senderId: any, receiverId: any): Promise<any> {
+    try {
+      let chat: any | null = await Chat2.findOne({
+        users: { $all: [senderId, receiverId] },
+      });
+
+      if (chat) {
+        const populatedChat = await Chat2.aggregate([
+          { $match: { _id: chat._id } },
+          {
+            $lookup: {
+              from: "users", // Collection name for users
+              localField: "users",
+              foreignField: "_id",
+              as: "userDetails",
+            },
+          },
+          {
+            $lookup: {
+              from: "mechanics", // Collection name for mechanics
+              localField: "users",
+              foreignField: "_id",
+              as: "mechanicDetails",
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              isGroupChat: 1,
+              users: 1,
+              userDetails: 1,
+              mechanicDetails: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ]);
+        return populatedChat[0]; // Return the first result
+      }
+
+      const newChat = new Chat2({
+        users: [senderId, receiverId],
+        isGroupChat: false,
+      });
+
+      chat = await newChat.save();
+
+      const populatedNewChat = await Chat2.aggregate([
+        { $match: { _id: chat._id } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "users",
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        {
+          $lookup: {
+            from: "mechanics",
+            localField: "users",
+            foreignField: "_id",
+            as: "mechanicDetails",
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            isGroupChat: 1,
+            users: 1,
+            userDetails: 1,
+            mechanicDetails: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      ]);
+
+
+      return populatedNewChat[0]; 
+    } catch (error) {
+      console.error("Error in repository:", error);
+    }
+  }
+
+  async fetchChats(senderId: string) {
+    try {
+      let chats = await Chat2.aggregate([
+        {
+          $match: {
+            users: { $elemMatch: { $eq: new mongoose.Types.ObjectId(senderId) } }
+          }
+        },
+        {
+          $lookup: {
+            from: "mechanics",
+            localField: "users.0",
+            foreignField: "_id",
+            as: "userDetails"
+          }
+        },
+        {
+          $lookup: {
+            from: "users",  
+            localField: "users.1",  
+            foreignField: "_id",
+            as: "mechanicDetails"
+          }
+        },
+        {
+          $lookup: {
+            from: "messages",  
+            localField: "latestMessage",
+            foreignField: "_id",
+            as: "latestMessageDetails"
+          }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$mechanicDetails" },
+        { $unwind: "$latestMessageDetails" },
+        {
+          $project: {
+            "userDetails.password": 0,
+            "userDetails.isVerified": 0,
+            "mechanicDetails.isVerified": 0,
+            "mechanicDetails.isMechanic": 0,
+            "mechanicDetails.isCompleted": 0,
+            "mechanicDetails.password": 0,
+            "userDetails.__v": 0,
+            "mechanicDetails.__v": 0
+          }
+        }
+      ]);      
+      return chats
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async sendMessage(content: string, chatId: string, senderId: string) {
+    try {
+
+        let newMessage: any = await Message.create({
+            sender: senderId,
+            content: content,
+            chat: chatId,
+        });
+
+
+        // Update the latest message in the chat
+        await Chat2.findByIdAndUpdate(chatId, {
+            latestMessage: newMessage._id,
+        });
+
+        // Find the newly created message and populate sender and chat data using aggregation
+        let populatedMessage = await Message.aggregate([
+            {
+                $match: {
+                    _id: newMessage._id,
+                },
+            },
+            {
+                $lookup: {
+                    from: "users", // Database/collection for mechanics (sender)
+                    localField: "sender",
+                    foreignField: "_id",
+                    as: "senderInfo", // Populate sender data
+                },
+            },
+            {
+                $unwind: "$senderInfo", // Unwind sender data
+            },
+            {
+                $lookup: {
+                    from: "chats", // Database/collection for chats
+                    localField: "chat",
+                    foreignField: "_id",
+                    as: "chatInfo", // Populate chat data
+                },
+            },
+            {
+                $unwind: "$chatInfo", // Unwind chat data
+            },
+            {
+                $lookup: {
+                    from: "mechanics", // Users collection to populate user and mechanic
+                    localField: "chatInfo.users",
+                    foreignField: "_id",
+                    as: "chatInfo.usersDetails", // Populate user and mechanic details
+                },
+            },
+            // Project to exclude sensitive fields
+            {
+                $project: {
+                    "senderInfo.password": 0,
+                    "senderInfo.isBlocked": 0,
+                    "chatInfo.usersDetails.password": 0,
+                    "chatInfo.usersDetails.isBlocked": 0,
+                    "chatInfo.usersDetails.isUser": 0, // Add more if needed
+                }
+            }
+        ]);
+        return populatedMessage[0]; // Return the populated message document without sensitive data
+    } catch (error) {
+        console.error("Error in sendMessage:", error);
+        throw error;
+    }
+}
+
+async getAllMessages(chatId: string) {
+  try {
+      const messages = await Message.aggregate([
+          {
+              $match: { chat: new mongoose.Types.ObjectId(chatId) }
+          },
+          {
+              $lookup: {
+                  from: "users", // Assuming your mechanics collection is named "mechanics"
+                  localField: "sender",
+                  foreignField: "_id",
+                  as: "senderDetails"
+              }
+          },
+          {
+              $unwind: {
+                  path: "$senderDetails",
+                  preserveNullAndEmptyArrays: true
+              }
+          },
+          {
+              $project: {
+                  _id: 1,
+                  content: 1,
+                  chat: 1,
+                  createdAt: 1,
+                  updatedAt: 1,
+                  sender: {
+                      _id: "$senderDetails._id",
+                      name: "$senderDetails.name",
+                      email: "$senderDetails.email",
+                  }
+              }
+          },
+          {
+              $sort: { createdAt: 1 }
+          }
+      ]);
+      return messages;
+  } catch (error) {
+      console.error('Error in getAllMessages:', error);
+      throw error;
+  }
+}
+
+
 }
 
 export default UserRepository;

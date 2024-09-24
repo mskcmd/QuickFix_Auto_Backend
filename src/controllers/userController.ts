@@ -426,140 +426,8 @@ class UserController {
     }
   }
 
-  async createChat(req: any, res: Response): Promise<void> {
-    try {
-
-      const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
-      console.log(senderId, receiverId);
-
-      if (!senderId || !receiverId) {
-        console.log("UserId or receverId param not sent with request");
-        res.sendStatus(400);
-        return;
-      }
-
-      const response = await this.userService.createChat(senderId, receiverId);
-      
-      if (response) {
-        res.status(200).send(response);
-      } else {
-        res.status(404).send("Chat not found");
-      }
-    } catch (error) {
-      console.error("Server error:", error);
-      res.status(500).send("Server error");
-    }
-  }
-
-  async fetchChats(req: any, res: Response): Promise<void> {
-    try {
-      const { senderId } = req.query as { senderId: string };
-
-      let chats: any = await Chat.find({
-        users: { $elemMatch: { $eq: senderId } },
-      })
-        .populate("users", "-password")
-        .populate("latestMessage")
-        .sort({ updatedAt: -1 });
-
-      chats = await User.populate(chats, {
-        path: "latestMessage.sender",
-        select: "name email imageUrl",
-      });
-
-      console.log("vv",chats);
-      
-
-      res.status(200).send(chats);
-      return
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Failed to fetch chats" });
-    }
-  }
-
-  async allUsers(req: Request, res: Response): Promise<void> {
-    try {
-      console.log(req.query.search);
-
-      const keyword = req.query.search
-        ? {
-          $or: [
-            { name: { $regex: req.query.search as string, $options: "i" } },
-            { email: { $regex: req.query.search as string, $options: "i" } },
-          ],
-        }
-        : {};
-
-      let users: any
-      users = await User.find(keyword)
-      // users = await Mechanic.find(keyword)
-      console.log("users", users);
-      res.json(users);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server Error" });
-    }
-  }
-
-  async sendMessage(req: Request, res: Response): Promise<any> {
-    try {
-      const { content, chatId, senderId } = req.body;
-      console.log(content, chatId, senderId);
-
-      if (!content || !chatId) {
-        console.log("Invalid data passed into request");
-        return res.sendStatus(400);
-      }
-
-      const newMessage = {
-        sender: senderId,
-        content: content,
-        chat: chatId,
-      };
-
-      try {
-        let message: any = await Message.create(newMessage);
-
-        message = await message.populate("sender", "name imageUrl");
-        message = await message.populate("chat");
-        message = await message.populate({
-          path: "chat.users",
-          select: "name imageUrl email",
-          model: User
-        });
-
-        await Chat.findByIdAndUpdate(req.body.chatId, {
-          latestMessage: message,
-        });
-        console.log("m", message);
-
-        res.json(message);
-      } catch (error) {
-        console.error("Error saving message to the database:", (error as Error).message);
-        res.status(400).json({ error: "Failed to save message" });
-      }
-    } catch (error) {
-      console.error("Error sending message:", (error as Error).message);
-      res.status(500).json({ error: "Server error" });
-    }
-  }
-
-  async allMessagess(req: Request, res: Response): Promise<any> {
-    try {
-      const message = await Message.find({ chat: req.params.chatId })
-        .populate("sender", "name imageUrl email")
-        .populate("chat");
-
-      res.json(message);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Something went wrong" });
-    }
-  }
-
   async fetchPayment(req: Request, res: Response): Promise<any> {
     try {
-      console.log("paymet id", req.query.id);
       const id: any = req.query.id
       const result = await this.userService.fetchPayment(id)
       console.log(result);
@@ -571,19 +439,15 @@ class UserController {
 
   async updatePayment(req: Request, res: Response): Promise<any> {
     try {
-
       const { paymentId, status } = req.body;
-
       const result = await Payment.findOneAndUpdate(
         { _id: paymentId, status: "pending" },
         { status: status },
         { new: true }
       );
-
       if (!result) {
         return res.status(404).json({ message: "Payment not found or already completed" });
       }
-
       console.log(result);
       res.json(result);
     } catch (error) {
@@ -594,11 +458,8 @@ class UserController {
 
   async feedBack(req: Request, res: Response): Promise<any> {
     try {
-      console.log(req.body);
-
       const { values, id, mechId, paymentId } = req.body;
       const { rating, feedback } = values;
-
       if (!rating || !feedback || !id || !mechId) {
         throw new Error("One or more required fields are empty.");
       }
@@ -612,7 +473,6 @@ class UserController {
 
   async feedBackCheck(req: Request, res: Response): Promise<void> {
     const id = req.query.id as string;
-    console.log(id);
     try {
       if (!id) {
         res.status(400).json({ error: "ID and type are required" });
@@ -631,7 +491,7 @@ class UserController {
       const response = await this.userService.fetchBlogs();
       res.status(200).json(response);
     } catch (error) {
-      console.error('Error fetching blogs:', error); 
+      console.error('Error fetching blogs:', error);
       res.status(500).json({ message: 'Failed to fetch blogs' });
     }
   }
@@ -641,13 +501,78 @@ class UserController {
       const response = await this.userService.fetchAllBlogs();
       res.status(200).json(response);
     } catch (error) {
-      console.error('Error fetching blogs:', error); 
+      console.error('Error fetching blogs:', error);
       res.status(500).json({ message: 'Failed to fetch blogs' });
     }
   }
 
+  //chats
+  async allUsers(req: Request, res: Response): Promise<void> {
+    try {
+      console.log(req.query.search);
+      const result = await this.userService.allUsers(req.query.search)
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
 
+  async createChat(req: any, res: Response): Promise<void> {
+    try {
 
+      const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
+      if (!senderId || !receiverId) {
+        console.log("UserId or receverId param not sent with request");
+        res.sendStatus(400);
+        return;
+      }
+      const response = await this.userService.createChat(senderId, receiverId);
+      if (response) {
+        res.status(200).send(response);
+      } else {
+        res.status(404).send("Chat not found");
+      }
+    } catch (error) {
+      console.error("Server error:", error);
+      res.status(500).send("Server error");
+    }
+  }
+
+  async fetchChats(req: any, res: Response): Promise<void> {
+    try {
+      const { senderId } = req.query as { senderId: string };
+      const result = await this.userService.fetchChats(senderId)
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Failed to fetch chats" });
+    }
+  }
+
+  async sendMessage(req: Request, res: Response): Promise<any> {
+    try {
+      const { content, chatId, senderId } = req.body;
+      if (!content || !chatId) {
+        console.log("Invalid data passed into request");
+        return res.sendStatus(400);
+      }
+      const result = await this.userService.sendMessage(content, chatId, senderId)
+      res.json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async allMessagess(req: Request, res: Response): Promise<any> {
+    try {
+      const chatId: any = req.params.chatId
+      const result = await this.userService.allMessagess(chatId)
+      res.json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
 
 

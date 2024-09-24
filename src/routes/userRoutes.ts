@@ -26,9 +26,9 @@ userRoute.get("/fetchBookData", userController.fetchBookData.bind(userController
 userRoute.post("/updateProfle", uploadSingleImage, userController.updateProfile.bind(userController))
 
 
+userRoute.get("/chat/allUsers", userController.allUsers.bind(userController))
 userRoute.post("/chat/create",userController.createChat.bind(userController))
 userRoute.get("/chat/fetchChats",userController.fetchChats.bind(userController))
-userRoute.get("/chat/allUsers", userController.allUsers.bind(userController))
 userRoute.post("/chat/sendMessage",userController.sendMessage.bind(userController))
 userRoute.get("/chat/allMesssge/:chatId", userController.allMessagess.bind(userController))
 
@@ -42,7 +42,7 @@ userRoute.post("/webhook",
 userRoute.post("/update-payment-status", userController.updatePayment.bind(userController))
 userRoute.post("/feedback",userAuth, userController.feedBack.bind(userController))
 userRoute.get("/feedbackcheck",userAuth, userController.feedBackCheck.bind(userController))
-userRoute.get("/fetchblogs",userAuth,userController.fetchBlogs.bind(userController))
+userRoute.get("/fetchblogs",userController.fetchBlogs.bind(userController))
 userRoute.get("/fetchallblogs",userController.fetchAllBlogs.bind(userController))
 
 export default userRoute

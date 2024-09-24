@@ -494,7 +494,6 @@ class mechanicController {
 
       let users: any
       users = await User.find(keyword)
-      console.log("users", users);
       res.json(users);
     } catch (error) {
       console.error(error);
@@ -505,7 +504,6 @@ class mechanicController {
   async createChat(req: Request, res: Response): Promise<void> {
     try {
       const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
-      console.log(senderId, receiverId);
 
       if (!senderId || !receiverId) {
         console.log("UserId or receverId param not sent with request");
@@ -527,7 +525,6 @@ class mechanicController {
   async sendMessage(req: Request, res: Response): Promise<any> {
     try {
       const { content, chatId, senderId } = req.body;
-      console.log("Suahil", content, chatId, senderId);
 
       if (!content || !chatId) {
         console.log("Invalid data passed into request");
@@ -540,7 +537,27 @@ class mechanicController {
     }
   }
 
+  async allMessagess(req: Request, res: Response): Promise<any> {
+    try {
+      const chatId: any = req.params.chatId
+      const result = await this.mechanicServices.allMessagess(chatId)
+      res.json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
+  async fetchChats(req: any, res: Response): Promise<void> {
+    try {
+      const { senderId } = req.query as { senderId: string };
+      const result = await this.mechanicServices.fetchChats(senderId)
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Failed to fetch chats" });
+    }
+  }
+  
 }
 
 export default mechanicController

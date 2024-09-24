@@ -33,7 +33,8 @@ mechanicRoute.get("/paymentFetch", mechanicController.paymentFetch.bind(mechanic
 mechanicRoute.get("/usersdata", mechanicController.allUsers.bind(mechanicController))
 mechanicRoute.post("/create", mechanicController.createChat.bind(mechanicController))
 mechanicRoute.post("/sendMessage", mechanicController.sendMessage.bind(mechanicController))
-
+mechanicRoute.get("/allMesssge/:chatId", mechanicController.allMessagess.bind(mechanicController))
+mechanicRoute.get("/fetchChats",mechanicController.fetchChats.bind(mechanicController))
 
 
 export default mechanicRoute

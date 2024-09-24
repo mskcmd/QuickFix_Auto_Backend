@@ -12,7 +12,6 @@ class UserServices {
     private otpRepo: OtpRepository;
     private createjwt: CreateJWT = new CreateJWT;
 
-
     constructor(userRepo: UserRepositories, otpRepo: OtpRepository) {
         this.userRepo = userRepo;
         this.otpRepo = otpRepo;
@@ -239,15 +238,7 @@ class UserServices {
         }
     }
 
-    async createChat(senderId: string, receverId: string): Promise<any> {
-        try {
-            const chat = await this.userRepo.createChat(senderId, receverId);
-            return chat;
-        } catch (error) {
-            console.error("Error in service:", error);
-            throw error;
-        }
-    }
+
 
     async fetchPayment(id: string): Promise<any> {
         try {
@@ -296,7 +287,57 @@ class UserServices {
             console.log(error);
         }
     }
-    
+
+    //chats
+
+    async allUsers(keyword: any): Promise<any> {
+        try {
+            const result = await this.userRepo.allUsers(keyword)
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async createChat(senderId: string, receverId: string): Promise<any> {
+        try {
+            const chat = await this.userRepo.createChat(senderId, receverId);
+            return chat;
+        } catch (error) {
+            console.error("Error in service:", error);
+            throw error;
+        }
+    }
+
+    async fetchChats(senderId: string) {
+        try {
+            const result = await this.userRepo.fetchChats(senderId)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async sendMessage(content: string, chatId: string, senderId: string) {
+        try {
+            const result = await this.userRepo.sendMessage(content, chatId, senderId)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async allMessagess(chatId: string) {
+        try {
+            const result = await this.userRepo.getAllMessages(chatId)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
 
 
 

@@ -11,6 +11,7 @@ import Booking from "../models/mechanikBookingModel";
 import Payment from "../models/paymentModel";
 import Blog from "../models/blogModel";
 import Message from '../models/messageModel2';
+import { log } from "console";
 
 class mechanicRepositories {
 
@@ -453,7 +454,6 @@ class mechanicRepositories {
 
     async deleteBlog(id: String): Promise<any> {
         try {
-            console.log("id", id);
             const result = await Blog.find({ _id: id })
             console.log(result[0].imageUrl);
             let img = result[0].imageUrl
@@ -468,9 +468,7 @@ class mechanicRepositories {
 
     async fetchEditBlog(id: String): Promise<any> {
         try {
-            console.log("id", id);
             const result = await Blog.find({ _id: id })
-            console.log("ssss", result);
             return result
         } catch (error) {
             console.log(error);
@@ -533,7 +531,6 @@ class mechanicRepositories {
                 })
                 .populate('services');
 
-            console.log("fetchPayment", paymentData);
             return paymentData;
         } catch (error) {
             console.log(error);
@@ -543,7 +540,6 @@ class mechanicRepositories {
 
     async createChat(senderId: any, receiverId: any): Promise<any> {
         try {
-            console.log("lok", senderId, receiverId);
 
             let chat: any | null = await Chat2.findOne({
                 users: { $all: [senderId, receiverId] },
@@ -581,7 +577,6 @@ class mechanicRepositories {
                         },
                     },
                 ]);
-                console.log("Return the first result", populatedChat[0]);
                 return populatedChat[0]; // Return the first result
             }
 
@@ -633,90 +628,22 @@ class mechanicRepositories {
         }
     }
 
-    // async sendMessage(content: string, chatId: string, senderId: string) {
-    //     try {
-    //         console.log("Sending message:", content, chatId, senderId);
-
-    //         // Create the new message
-    //         let newMessage: any = await Message.create({
-    //             sender: senderId,
-    //             content: content,
-    //             chat: chatId,
-    //         });
-
-    //         console.log("New message created:", newMessage);
-
-    //         // Update the latest message in the chat
-    //         await Chat2.findByIdAndUpdate(chatId, {
-    //             latestMessage: newMessage._id,
-    //         });
-
-    //         // Find the newly created message and populate sender and chat data using aggregation
-    //         let populatedMessage = await Message.aggregate([
-    //             {
-    //                 $match: {
-    //                     _id: newMessage._id,
-    //                 },
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: "mechanics", // Database/collection for mechanics (sender)
-    //                     localField: "sender",
-    //                     foreignField: "_id",
-    //                     as: "senderInfo", // Populate sender data
-    //                 },
-    //             },
-    //             {
-    //                 $unwind: "$senderInfo", // Unwind sender data if it's an array
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: "chats", // Database/collection for chats
-    //                     localField: "chat",
-    //                     foreignField: "_id",
-    //                     as: "chatInfo", // Populate chat data
-    //                 },
-    //             },
-    //             {
-    //                 $unwind: "$chatInfo", // Unwind chat data if it's an array
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: "users", // Users collection to populate user and mechanic
-    //                     localField: "chatInfo.users",
-    //                     foreignField: "_id",
-    //                     as: "chatInfo.usersDetails", // Populate user and mechanic details
-    //                 },
-    //             },
-    //         ]);
-
-    //         console.log("Populated message:", populatedMessage);
-
-    //         return populatedMessage; // Return the populated message document
-    //     } catch (error) {
-    //         console.error("Error in sendMessage:", error);
-    //         throw error;
-    //     }
-    // }
-
     async sendMessage(content: string, chatId: string, senderId: string) {
         try {
-            console.log("Sending message:", content, chatId, senderId);
-    
+
             // Create the new message
             let newMessage: any = await Message.create({
                 sender: senderId,
                 content: content,
                 chat: chatId,
             });
-    
-            console.log("New message created:", newMessage);
-    
+
+
             // Update the latest message in the chat
             await Chat2.findByIdAndUpdate(chatId, {
                 latestMessage: newMessage._id,
             });
-    
+
             // Find the newly created message and populate sender and chat data using aggregation
             let populatedMessage = await Message.aggregate([
                 {
@@ -765,16 +692,116 @@ class mechanicRepositories {
                     }
                 }
             ]);
-    
-            console.log("Populated message:", populatedMessage);
-    
+
             return populatedMessage[0]; // Return the populated message document without sensitive data
         } catch (error) {
             console.error("Error in sendMessage:", error);
             throw error;
         }
     }
-    
+
+    async getAllMessages(chatId: string) {
+        try {
+            const messages = await Message.aggregate([
+                {
+                    $match: { chat: new mongoose.Types.ObjectId(chatId) }
+                },
+                {
+                    $lookup: {
+                        from: "mechanics", // Assuming your mechanics collection is named "mechanics"
+                        localField: "sender",
+                        foreignField: "_id",
+                        as: "senderDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$senderDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        content: 1,
+                        chat: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        sender: {
+                            _id: "$senderDetails._id",
+                            name: "$senderDetails.name",
+                            email: "$senderDetails.email",
+                        }
+                    }
+                },
+                {
+                    $sort: { createdAt: 1 }
+                }
+            ]);
+            return messages;
+        } catch (error) {
+            console.error('Error in getAllMessages:', error);
+            throw error;
+        }
+    }
+
+    async fetchChats(senderId: string) {
+
+        try {
+            let chats = await Chat2.aggregate([
+                {
+                    $match: {
+                        users: { $elemMatch: { $eq: new mongoose.Types.ObjectId(senderId) } }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "mechanics",
+                        localField: "users.0",
+                        foreignField: "_id",
+                        as: "userDetails"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",  // Assuming mechanics collection is named 'mechanics'
+                        localField: "users.1",  // Second user (mechanic) in the array
+                        foreignField: "_id",
+                        as: "mechanicDetails"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "messages",  // Assuming messages collection is named 'messages'
+                        localField: "latestMessage",
+                        foreignField: "_id",
+                        as: "latestMessageDetails"
+                    }
+                },
+                { $unwind: "$userDetails" },
+                { $unwind: "$mechanicDetails" },
+                { $unwind: "$latestMessageDetails" },
+                {
+                    $project: {
+                        "userDetails.password": 0,
+                        "userDetails.isVerified": 0,
+                        "mechanicDetails.isVerified": 0,
+                        "mechanicDetails.isMechanic": 0,
+                        "mechanicDetails.isCompleted": 0,
+                        "mechanicDetails.password": 0,
+                        "userDetails.__v": 0,
+                        "mechanicDetails.__v": 0
+                    }
+                }
+            ]);
+            return chats
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+
 
 
 }

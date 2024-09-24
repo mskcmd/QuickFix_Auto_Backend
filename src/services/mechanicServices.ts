@@ -320,7 +320,17 @@ class mechanicServices {
 
     async sendMessage(content: string, chatId: string, senderId: string) {
         try {
-            const result = await this.mechanicRepo.sendMessage( content, chatId, senderId )
+            const result = await this.mechanicRepo.sendMessage(content, chatId, senderId)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+    
+    async allMessagess(chatId: string) {
+        try {
+            const result = await this.mechanicRepo.getAllMessages(chatId)
             return result
         } catch (error) {
             console.log(error);
@@ -328,7 +338,15 @@ class mechanicServices {
         }
     }
 
+    async fetchChats(senderId: string) {
+        try {
+            const result = await this.mechanicRepo.fetchChats(senderId)
+            return result
+        } catch (error) {
+            console.log(error);
 
+        }
+    }
 
 }
 
