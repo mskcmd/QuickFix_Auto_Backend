@@ -24,6 +24,7 @@ const paymentController = new PaymentController(paymentService)
 userRoute.post("/booking", userController.mechBooking.bind(userController))
 userRoute.get("/fetchBookData", userController.fetchBookData.bind(userController))
 userRoute.post("/updateProfle", uploadSingleImage, userController.updateProfile.bind(userController))
+userRoute.get("/getProfile",userAuth, userController.getProfile.bind(userController))
 
 
 userRoute.get("/chat/allUsers", userController.allUsers.bind(userController))
@@ -44,5 +45,8 @@ userRoute.post("/feedback",userAuth, userController.feedBack.bind(userController
 userRoute.get("/feedbackcheck",userAuth, userController.feedBackCheck.bind(userController))
 userRoute.get("/fetchblogs",userController.fetchBlogs.bind(userController))
 userRoute.get("/fetchallblogs",userController.fetchAllBlogs.bind(userController))
+userRoute.get("/fetchAllService",userController.fetchAllService.bind(userController))
+userRoute.get("/fetchAllshop",userController.fetchAllshop.bind(userController))
+userRoute.get("/fetchFreelancer",userController.fetchFreelancer.bind(userController))
 
 export default userRoute

@@ -14,6 +14,8 @@ import FeedBack from "../models/feedbackModel";
 import Blog from "../models/blogModel";
 import Chat2 from "../models/chatModel2";
 import Message from '../models/messageModel2';
+import Service from '../models/serviceModel';
+import { log } from "console";
 
 
 class UserRepository {
@@ -133,6 +135,7 @@ class UserRepository {
       throw error;
     }
   }
+
 
 
   async findMechanicsNearLocation(lat: number, lon: number, type: string, maxDistance: number = 5000) {
@@ -349,6 +352,104 @@ class UserRepository {
     }
   }
 
+  async fetchAllService(): Promise<{ new: any[], popular: any[] }> {
+    try {
+      // Fetch the 10 newest services, sorted by creation date
+      const newServices = await Service.find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('_id serviceName serviceDetails price imageUrl createdAt');
+
+      // Fetch the 10 most popular services based on the count of occurrences in payments
+      const popularServices = await Payment.aggregate([
+        { $unwind: "$services" }, // Unwind the services array to process each service separately
+        { $group: { _id: "$services", count: { $sum: 1 } } }, // Group by service ID and count occurrences
+        { $sort: { count: -1 } }, // Sort by the count in descending order
+        { $limit: 10 }, // Limit to the top 10 most popular services
+        {
+          $lookup: {
+            from: "services", // Reference the Service collection
+            localField: "_id", // Link with the Service's _id
+            foreignField: "_id",
+            as: "serviceDetails"
+          }
+        },
+        { $unwind: "$serviceDetails" }, // Unwind the serviceDetails array to get the object
+        {
+          $project: {
+            _id: "$serviceDetails._id", // Return the Service's _id
+            serviceName: "$serviceDetails.serviceName", // Include the serviceName
+            serviceDetails: "$serviceDetails.serviceDetails", // Include serviceDetails
+            price: "$serviceDetails.price", // Include the price
+            imageUrl: "$serviceDetails.imageUrl", // Include the imageUrl
+            createdAt: "$serviceDetails.createdAt", // Include the created date
+          }
+        }
+      ]);
+
+      // Return both the new and popular services
+      return {
+        new: newServices,
+        popular: popularServices
+      };
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      throw new Error("Failed to fetch services");
+    }
+  }
+
+  async fetchAllshop(serviceName: string) {
+    try {
+      const result = await Service.aggregate([
+        {
+          $match: { serviceName: serviceName }
+        },
+        {
+          $lookup: {
+            from: 'mechanics',
+            localField: 'mechanic',
+            foreignField: '_id',
+            as: 'mechanicDetails'
+          }
+        },
+        { $unwind: '$mechanicDetails' },
+        {
+          $lookup: {
+            from: 'mechanicdatas',
+            localField: 'mechanicDetails.mechanicdataID',
+            foreignField: '_id',
+            as: 'mechanicData'
+          }
+        },
+        { $unwind: '$mechanicData' },
+        {
+          $project: {
+            _id: 0,
+            'mechanicDetails.name': 1,
+            mechanicData: 1
+          }
+        }
+      ]);
+
+      console.log("result", result);
+      return result
+
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      throw new Error("Failed to fetch services");
+    }
+  }
+
+  async fetchFreelancer() {
+    try {
+      const result = await MechanicData.find({type:"freelancer"})
+      return result
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      throw new Error("Failed to fetch services");
+    }
+  }
+
   //chat
 
   async allUsers(keyword: string): Promise<any> {
@@ -449,7 +550,7 @@ class UserRepository {
       ]);
 
 
-      return populatedNewChat[0]; 
+      return populatedNewChat[0];
     } catch (error) {
       console.error("Error in repository:", error);
     }
@@ -473,15 +574,15 @@ class UserRepository {
         },
         {
           $lookup: {
-            from: "users",  
-            localField: "users.1",  
+            from: "users",
+            localField: "users.1",
             foreignField: "_id",
             as: "mechanicDetails"
           }
         },
         {
           $lookup: {
-            from: "messages",  
+            from: "messages",
             localField: "latestMessage",
             foreignField: "_id",
             as: "latestMessageDetails"
@@ -502,7 +603,7 @@ class UserRepository {
             "mechanicDetails.__v": 0
           }
         }
-      ]);      
+      ]);
       return chats
     } catch (error) {
       console.error(error);
@@ -512,117 +613,117 @@ class UserRepository {
   async sendMessage(content: string, chatId: string, senderId: string) {
     try {
 
-        let newMessage: any = await Message.create({
-            sender: senderId,
-            content: content,
-            chat: chatId,
-        });
+      let newMessage: any = await Message.create({
+        sender: senderId,
+        content: content,
+        chat: chatId,
+      });
 
 
-        // Update the latest message in the chat
-        await Chat2.findByIdAndUpdate(chatId, {
-            latestMessage: newMessage._id,
-        });
+      // Update the latest message in the chat
+      await Chat2.findByIdAndUpdate(chatId, {
+        latestMessage: newMessage._id,
+      });
 
-        // Find the newly created message and populate sender and chat data using aggregation
-        let populatedMessage = await Message.aggregate([
-            {
-                $match: {
-                    _id: newMessage._id,
-                },
-            },
-            {
-                $lookup: {
-                    from: "users", // Database/collection for mechanics (sender)
-                    localField: "sender",
-                    foreignField: "_id",
-                    as: "senderInfo", // Populate sender data
-                },
-            },
-            {
-                $unwind: "$senderInfo", // Unwind sender data
-            },
-            {
-                $lookup: {
-                    from: "chats", // Database/collection for chats
-                    localField: "chat",
-                    foreignField: "_id",
-                    as: "chatInfo", // Populate chat data
-                },
-            },
-            {
-                $unwind: "$chatInfo", // Unwind chat data
-            },
-            {
-                $lookup: {
-                    from: "mechanics", // Users collection to populate user and mechanic
-                    localField: "chatInfo.users",
-                    foreignField: "_id",
-                    as: "chatInfo.usersDetails", // Populate user and mechanic details
-                },
-            },
-            // Project to exclude sensitive fields
-            {
-                $project: {
-                    "senderInfo.password": 0,
-                    "senderInfo.isBlocked": 0,
-                    "chatInfo.usersDetails.password": 0,
-                    "chatInfo.usersDetails.isBlocked": 0,
-                    "chatInfo.usersDetails.isUser": 0, // Add more if needed
-                }
-            }
-        ]);
-        return populatedMessage[0]; // Return the populated message document without sensitive data
-    } catch (error) {
-        console.error("Error in sendMessage:", error);
-        throw error;
-    }
-}
-
-async getAllMessages(chatId: string) {
-  try {
-      const messages = await Message.aggregate([
-          {
-              $match: { chat: new mongoose.Types.ObjectId(chatId) }
+      // Find the newly created message and populate sender and chat data using aggregation
+      let populatedMessage = await Message.aggregate([
+        {
+          $match: {
+            _id: newMessage._id,
           },
-          {
-              $lookup: {
-                  from: "users", // Assuming your mechanics collection is named "mechanics"
-                  localField: "sender",
-                  foreignField: "_id",
-                  as: "senderDetails"
-              }
+        },
+        {
+          $lookup: {
+            from: "users", // Database/collection for mechanics (sender)
+            localField: "sender",
+            foreignField: "_id",
+            as: "senderInfo", // Populate sender data
           },
-          {
-              $unwind: {
-                  path: "$senderDetails",
-                  preserveNullAndEmptyArrays: true
-              }
+        },
+        {
+          $unwind: "$senderInfo", // Unwind sender data
+        },
+        {
+          $lookup: {
+            from: "chats", // Database/collection for chats
+            localField: "chat",
+            foreignField: "_id",
+            as: "chatInfo", // Populate chat data
           },
-          {
-              $project: {
-                  _id: 1,
-                  content: 1,
-                  chat: 1,
-                  createdAt: 1,
-                  updatedAt: 1,
-                  sender: {
-                      _id: "$senderDetails._id",
-                      name: "$senderDetails.name",
-                      email: "$senderDetails.email",
-                  }
-              }
+        },
+        {
+          $unwind: "$chatInfo", // Unwind chat data
+        },
+        {
+          $lookup: {
+            from: "mechanics", // Users collection to populate user and mechanic
+            localField: "chatInfo.users",
+            foreignField: "_id",
+            as: "chatInfo.usersDetails", // Populate user and mechanic details
           },
-          {
-              $sort: { createdAt: 1 }
+        },
+        // Project to exclude sensitive fields
+        {
+          $project: {
+            "senderInfo.password": 0,
+            "senderInfo.isBlocked": 0,
+            "chatInfo.usersDetails.password": 0,
+            "chatInfo.usersDetails.isBlocked": 0,
+            "chatInfo.usersDetails.isUser": 0, // Add more if needed
           }
+        }
+      ]);
+      return populatedMessage[0]; // Return the populated message document without sensitive data
+    } catch (error) {
+      console.error("Error in sendMessage:", error);
+      throw error;
+    }
+  }
+
+  async getAllMessages(chatId: string) {
+    try {
+      const messages = await Message.aggregate([
+        {
+          $match: { chat: new mongoose.Types.ObjectId(chatId) }
+        },
+        {
+          $lookup: {
+            from: "users", // Assuming your mechanics collection is named "mechanics"
+            localField: "sender",
+            foreignField: "_id",
+            as: "senderDetails"
+          }
+        },
+        {
+          $unwind: {
+            path: "$senderDetails",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            content: 1,
+            chat: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            sender: {
+              _id: "$senderDetails._id",
+              name: "$senderDetails.name",
+              email: "$senderDetails.email",
+            }
+          }
+        },
+        {
+          $sort: { createdAt: 1 }
+        }
       ]);
       return messages;
-  } catch (error) {
+    } catch (error) {
       console.error('Error in getAllMessages:', error);
       throw error;
+    }
   }
-}
 
 
 }

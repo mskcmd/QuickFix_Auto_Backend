@@ -62,7 +62,15 @@ class AdminServices {
         try {
             const result = await this.adimnRepo.getMechData()
             return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
+    async blockUser(id: string): Promise<any> {
+        try {
+            const result = await this.adimnRepo.blockUser(id)
+            return result
         } catch (error) {
             console.log(error);
         }

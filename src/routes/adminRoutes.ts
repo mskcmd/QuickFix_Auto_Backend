@@ -13,6 +13,8 @@ const adminController = new AdminController(adminServices)
 adminRoute.get("/getUserData",adminController.getUserhData.bind(adminController))
 adminRoute.get("/getMechData",adminController.getMechData.bind(adminController))
 
+adminRoute.put("/userBlock",adminController.blockUser.bind(adminController))
+
 
 
 

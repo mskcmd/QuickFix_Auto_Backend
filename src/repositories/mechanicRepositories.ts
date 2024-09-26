@@ -11,7 +11,6 @@ import Booking from "../models/mechanikBookingModel";
 import Payment from "../models/paymentModel";
 import Blog from "../models/blogModel";
 import Message from '../models/messageModel2';
-import { log } from "console";
 
 class mechanicRepositories {
 
@@ -30,10 +29,8 @@ class mechanicRepositories {
             const newMechanic = new Mechanic({ name, email, phone, password });
             const mechanic = await newMechanic.save();
             return mechanic;
-
         } catch (error) {
             console.log(error);
-
         }
     }
 
@@ -292,11 +289,11 @@ class mechanicRepositories {
         try {
             const { name, details, price, fileUrl, id } = serviceData;
             let img: any = serviceData.fileUrl
-            const isNameExist = await this.nameExists(name, img);
-            if (isNameExist) {
-                console.log("Service name already exists.");
-                return { error: "Service name already exists." };
-            }
+            // const isNameExist = await this.nameExists(name, img);
+            // if (isNameExist) {
+            //     console.log("Service name already exists.");
+            //     return { error: "Service name already exists." };
+            // }
             const newService = new Service({
                 mechanic: id,
                 serviceName: name,
@@ -381,7 +378,7 @@ class mechanicRepositories {
         }
     }
 
-    async createBill(userId: any, name: any, vehicleNumber: any, services: any, subtotal: any, gst: any, total: any, mechId: any): Promise<any> {
+    async createBill(userId: string, name: string, vehicleNumber: any, services: any, subtotal: any, gst: any, total: any, mechId: any): Promise<any> {
         try {
             console.log("User ID:", userId);
             console.log("Name:", name);
@@ -545,7 +542,6 @@ class mechanicRepositories {
                 users: { $all: [senderId, receiverId] },
             });
 
-            // If chat exists, aggregate and return it
             if (chat) {
                 const populatedChat = await Chat2.aggregate([
                     { $match: { _id: chat._id } },
@@ -799,11 +795,7 @@ class mechanicRepositories {
             console.error(error);
         }
     }
-
-
-
-
-
+    
 }
 
 export default mechanicRepositories

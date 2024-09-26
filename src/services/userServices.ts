@@ -238,7 +238,15 @@ class UserServices {
         }
     }
 
+    async getProfile(id: string) {
+        try {
+            const result = await this.userRepo.findUserById(id);
+            return result
+        } catch (error) {
+            console.error("Error fetching book data:", error);
 
+        }
+    }
 
     async fetchPayment(id: string): Promise<any> {
         try {
@@ -288,6 +296,32 @@ class UserServices {
         }
     }
 
+    async fetchAllService(): Promise<any> {
+        try {
+            const response = await this.userRepo.fetchAllService()
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async fetchAllshop(query:string): Promise<any> {
+        try {
+            const response = await this.userRepo.fetchAllshop(query)
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async fetchFreelancer(): Promise<any> {
+        try {
+            const response = await this.userRepo.fetchFreelancer()
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
     //chats
 
     async allUsers(keyword: any): Promise<any> {

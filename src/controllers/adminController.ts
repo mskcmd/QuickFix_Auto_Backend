@@ -81,6 +81,30 @@ class AdminController {
 
     }
   }
+
+  async blockUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.query.userId as string;
+  
+      if (!id) {
+        res.status(400).json({ error: "User ID is required" });
+        return;
+      }
+      const result = await this.adminServices.blockUser(id);
+  
+      if (result) {
+        res.status(200).json({
+          message: result.isBlocked ? "User blocked successfully" : "User unblocked successfully",
+          isBlocked: result.isBlocked
+        });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Something went wrong" });
+    }
+  }
 }
 
 export default AdminController
