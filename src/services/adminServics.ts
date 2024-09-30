@@ -76,6 +76,25 @@ class AdminServices {
         }
     }
 
+    async monthlyData() {
+        try {
+            const result = await this.adimnRepo.getMonthlyData()
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async blockMech(id: string): Promise<any> {
+        try {
+            const result = await this.adimnRepo.blockMech(id)
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 }
 
 

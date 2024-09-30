@@ -37,8 +37,6 @@ class mechanicRepositories {
     async login(email: string, password: string) {
         try {
             const mechanic = await Mechanic.findOne({ email }).select('-password');
-            console.log("user", mechanic);
-
             if (!mechanic) {
                 return { status: false, message: "mechanic not found." };
             }
@@ -91,7 +89,6 @@ class mechanicRepositories {
             const hashpass: string = await bcrypt.hash(password, 10);
             userData.password = hashpass;
             const result = await userData.save();
-            console.log('Password reset successful for user:', userId);
             return result
         } catch (error) {
             console.error('Error in UserService.resetPassword:', error);
@@ -100,10 +97,8 @@ class mechanicRepositories {
     }
 
     async registerData(uploadUrls: Record<string, string>, body: any): Promise<IMechanicData> {
-        console.log("ff,", body);
 
         try {
-            console.log("Processing data...");
 
             // Utility function to format images
             const formatImage = (url: string): { url: string; contentType: string } => ({
@@ -238,20 +233,20 @@ class mechanicRepositories {
                     path: 'user',
                     select: '-password -isBlocked -isUser -isVerified -createdAt -updatedAt'
                 })
+                .sort({ bookingTime: -1 }) // Sort by bookingTime in descending order
                 .exec();
-            console.log(bookings);
-
+    
             return bookings;
-
         } catch (error) {
-
+            console.error('Error fetching bookings:', error);
+            throw error;
         }
     }
+    
 
     async statusUpdate(id: string, status: string): Promise<any> {
         try {
             const objectId = new mongoose.Types.ObjectId(id);
-            console.log("Converted ObjectId:", objectId);
 
             // Update the status field using $set
             const result = await Booking.updateOne(
@@ -319,7 +314,6 @@ class mechanicRepositories {
     async fetchService(id: String): Promise<any> {
         try {
             const result = await Service.find({ mechanic: id })
-            console.log(result);
             return result
         } catch (error) {
             console.log(error);
@@ -380,16 +374,6 @@ class mechanicRepositories {
 
     async createBill(userId: string, name: string, vehicleNumber: any, services: any, subtotal: any, gst: any, total: any, mechId: any): Promise<any> {
         try {
-            console.log("User ID:", userId);
-            console.log("Name:", name);
-            console.log("Vehicle Number:", vehicleNumber);
-            console.log("Services:", services);
-            console.log("Subtotal:", subtotal);
-            console.log("GST:", gst);
-            console.log("Total:", total);
-            console.log("Mechanic ID:", mechId);
-
-            // const result = await Payment.
 
             const servicePayment = new Payment({
                 gst: gst,
@@ -441,7 +425,6 @@ class mechanicRepositories {
     async fetchBlog(id: String): Promise<any> {
         try {
             const result = await Blog.find({ mechanic: id })
-            console.log(result);
             return result
         } catch (error) {
             console.log(error);
@@ -452,7 +435,6 @@ class mechanicRepositories {
     async deleteBlog(id: String): Promise<any> {
         try {
             const result = await Blog.find({ _id: id })
-            console.log(result[0].imageUrl);
             let img = result[0].imageUrl
             await deleteFileFromS3(img);
             const result1 = await Blog.deleteOne({ _id: id });
@@ -616,7 +598,6 @@ class mechanicRepositories {
                 },
             ]);
 
-            console.log(populatedNewChat[0]);
 
             return populatedNewChat[0]; // Return the first result
         } catch (error) {
@@ -795,7 +776,96 @@ class mechanicRepositories {
             console.error(error);
         }
     }
-    
+
+    async fetchRevenue(mechanicId: string) {
+        try {
+            const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+            const endOfYear = new Date(new Date().getFullYear(), 11, 31, 23, 59, 59);
+
+            const payments: any = await Payment.find({
+                mechanic: mechanicId,
+                status: 'Completed',
+                createdAt: { $gte: startOfYear, $lte: endOfYear }
+            });
+
+            const monthlyRevenue = Array(12).fill(0);
+
+            payments.forEach((payment: { createdAt: { getMonth: () => any; }; total: any; }) => {
+                const month: any = payment.createdAt.getMonth();
+                monthlyRevenue[month] += payment.total;
+            });
+            console.log(monthlyRevenue);
+
+            return monthlyRevenue;
+        } catch (error) {
+            console.error('Error fetching revenue:', error);
+            throw error;
+        }
+    }
+
+
+    async fetchUserGrowths(mechanicId: any) {
+
+        console.log("mechanicId", mechanicId);
+
+        try {
+            const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+            const endOfYear = new Date(new Date().getFullYear(), 11, 31, 23, 59, 59);
+
+            const bookings = await Booking.aggregate([
+                {
+                    $match: {
+                        mechanic: new mongoose.Types.ObjectId(mechanicId),
+                        bookingTime: { $gte: startOfYear, $lte: endOfYear }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'user',
+                        foreignField: '_id',
+                        as: 'userDetails'
+                    }
+                },
+                {
+                    $unwind: '$userDetails'
+                },
+                {
+                    $group: {
+                        _id: { $month: '$bookingTime' },
+                        uniqueUsers: { $addToSet: '$user' }
+                    }
+                },
+                {
+                    $project: {
+                        month: '$_id',
+                        userCount: { $size: '$uniqueUsers' }
+                    }
+                },
+                {
+                    $sort: { month: 1 }
+                }
+            ]);
+
+            // Initialize an array with 12 zeros
+            const monthlyUserGrowth = Array(12).fill(0);
+
+            // Fill in the actual data
+            bookings.forEach(booking => {
+                monthlyUserGrowth[booking.month - 1] = booking.userCount;
+            });
+
+            //   console.log(monthlyUserGrowth);
+
+
+            return monthlyUserGrowth;
+        } catch (error) {
+            console.error('Error fetching user growth:', error);
+            throw error;
+        }
+    }
+
+
 }
 
 export default mechanicRepositories

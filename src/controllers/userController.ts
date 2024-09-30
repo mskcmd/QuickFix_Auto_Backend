@@ -413,10 +413,10 @@ class UserController {
   }
 
   async getProfile(req: Request, res: Response): Promise<void> {
-    try {      
+    try {
       if (req.userId) {
         const result = await this.userService.getProfile(req.userId);
-        if (result) {          
+        if (result) {
           res.status(200).json(result);
         } else {
           res.status(404).json({ error: "Profile not found" });
@@ -537,7 +537,7 @@ class UserController {
   async fetchAllshop(req: Request, res: Response): Promise<void> {
     try {
       console.log(req.query);
-      const {query}:any=req.query
+      const { query }: any = req.query
       console.log(query);
       const response = await this.userService.fetchAllshop(query);
       res.status(200).json(response);
@@ -551,7 +551,18 @@ class UserController {
     try {
       const response = await this.userService.fetchFreelancer();
       console.log(response);
-      
+
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      res.status(500).json({ message: 'Failed to fetch blogs' });
+    }
+  }
+
+  async bookingdata(req: Request, res: Response): Promise<void> {
+    try {
+      const id: any = req.query.id
+      const response = await this.userService.bookingdata(id);
       res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching blogs:', error);

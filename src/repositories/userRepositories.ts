@@ -358,38 +358,71 @@ class UserRepository {
       const newServices = await Service.find()
         .sort({ createdAt: -1 })
         .limit(10)
-        .select('_id serviceName serviceDetails price imageUrl createdAt');
+        .select('_id serviceName serviceDetails price imageUrl createdAt mechanic');
 
-      // Fetch the 10 most popular services based on the count of occurrences in payments
-      const popularServices = await Payment.aggregate([
-        { $unwind: "$services" }, // Unwind the services array to process each service separately
-        { $group: { _id: "$services", count: { $sum: 1 } } }, // Group by service ID and count occurrences
-        { $sort: { count: -1 } }, // Sort by the count in descending order
-        { $limit: 10 }, // Limit to the top 10 most popular services
+      // Lookup mechanic's name for the new services
+      const newServicesWithMechanic = await Service.aggregate([
+        { $match: { _id: { $in: newServices.map(service => service._id) } } },
         {
           $lookup: {
-            from: "services", // Reference the Service collection
-            localField: "_id", // Link with the Service's _id
-            foreignField: "_id",
-            as: "serviceDetails"
+            from: "mechanics", // Collection containing mechanic information
+            localField: "mechanic", // Field in Service that refers to the mechanic ID
+            foreignField: "_id", // Field in the Mechanics collection that matches the mechanic ID
+            as: "mechanicDetails" // Resulting field containing the mechanic's details
           }
         },
-        { $unwind: "$serviceDetails" }, // Unwind the serviceDetails array to get the object
+        { $unwind: "$mechanicDetails" }, // Unwind to get mechanic details as an object
         {
           $project: {
-            _id: "$serviceDetails._id", // Return the Service's _id
-            serviceName: "$serviceDetails.serviceName", // Include the serviceName
-            serviceDetails: "$serviceDetails.serviceDetails", // Include serviceDetails
-            price: "$serviceDetails.price", // Include the price
-            imageUrl: "$serviceDetails.imageUrl", // Include the imageUrl
-            createdAt: "$serviceDetails.createdAt", // Include the created date
+            _id: 1,
+            serviceName: 1,
+            serviceDetails: 1,
+            price: 1,
+            imageUrl: 1,
+            createdAt: 1,
+            "mechanicName": "$mechanicDetails.name" // Extract the mechanic's name
           }
         }
       ]);
 
-      // Return both the new and popular services
+      // Fetch the 10 most popular services based on the count of occurrences in payments
+      const popularServices = await Payment.aggregate([
+        { $unwind: "$services" },
+        { $group: { _id: "$services", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+        {
+          $lookup: {
+            from: "services",
+            localField: "_id",
+            foreignField: "_id",
+            as: "serviceDetails"
+          }
+        },
+        { $unwind: "$serviceDetails" },
+        {
+          $lookup: {
+            from: "mechanics",
+            localField: "serviceDetails.mechanic",
+            foreignField: "_id",
+            as: "mechanicDetails"
+          }
+        },
+        { $unwind: "$mechanicDetails" },
+        {
+          $project: {
+            _id: "$serviceDetails._id",
+            serviceName: "$serviceDetails.serviceName",
+            serviceDetails: "$serviceDetails.serviceDetails",
+            price: "$serviceDetails.price",
+            imageUrl: "$serviceDetails.imageUrl",
+            createdAt: "$serviceDetails.createdAt",
+            mechanicName: "$mechanicDetails.name" // Include the mechanic's name
+          }
+        }
+      ]);
       return {
-        new: newServices,
+        new: newServicesWithMechanic,
         popular: popularServices
       };
     } catch (error) {
@@ -440,9 +473,33 @@ class UserRepository {
     }
   }
 
+  async bookingdata(id: string): Promise<any> {
+    try {
+      const result: any = await MechanicData.find({ _id: id });
+      console.log("all data", result);
+      if (result.length > 0) {
+        const mechId = result[0].mechanicID;
+        const result1 = await Mechanic.find({ _id: mechId });
+        console.log("Mechanic details", result1[0].name);
+        const name = result1[0].name;
+        const yearsOfExperience = result[0].yearsOfExperience;
+        const specialization = result[0].specialization;
+        const profileImages = result[0].profileImages[0];
+        const services =  result[0].services
+        let arr = [name, yearsOfExperience, specialization, profileImages,services];
+        return arr;
+      } else {
+        throw new Error("No data found for the given ID");
+      }
+    } catch (error) {
+      console.log(error);
+      throw error;  // Re-throw error if needed for further handling
+    }
+  }
+
   async fetchFreelancer() {
     try {
-      const result = await MechanicData.find({type:"freelancer"})
+      const result = await MechanicData.find({ type: "freelancer" })
       return result
     } catch (error) {
       console.error("Error fetching services:", error);

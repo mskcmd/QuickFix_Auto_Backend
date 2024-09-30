@@ -28,19 +28,21 @@ const mechanicSchema = new Schema<MechnicDoc>({
     type: Boolean,
     default: false
   },
-  mechanicdataID: { 
+  mechanicdataID: {
     type: Schema.Types.ObjectId,
     ref: 'MechanicData',
-    default: null  
+    default: null
   },
-  isSubscriber: {  
+  isSubscriber: {
     type: Boolean,
     default: false
   },
-  isBlocked: {  
+  isBlocked: {
     type: Boolean,
     default: false
   },
+}, {
+  timestamps: true
 });
 
 const Mechanic: Model<MechnicDoc> = mongoose.model("Mechanic", mechanicSchema);

@@ -348,6 +348,26 @@ class mechanicServices {
         }
     }
 
+    async fetchRevenue(id: string) {
+        try {
+            const result = await this.mechanicRepo.fetchRevenue(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
+    async fetchuserGrowths(id: string) {
+        try {
+            const result = await this.mechanicRepo.fetchUserGrowths(id)
+            return result
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+
 }
 
 

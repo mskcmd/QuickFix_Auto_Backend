@@ -48,5 +48,6 @@ userRoute.get("/fetchallblogs",userController.fetchAllBlogs.bind(userController)
 userRoute.get("/fetchAllService",userController.fetchAllService.bind(userController))
 userRoute.get("/fetchAllshop",userController.fetchAllshop.bind(userController))
 userRoute.get("/fetchFreelancer",userController.fetchFreelancer.bind(userController))
+userRoute.get("/bookingdata",userController.bookingdata.bind(userController))
 
 export default userRoute

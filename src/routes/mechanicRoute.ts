@@ -36,5 +36,8 @@ mechanicRoute.post("/sendMessage", mechanicController.sendMessage.bind(mechanicC
 mechanicRoute.get("/allMesssge/:chatId", mechanicController.allMessagess.bind(mechanicController))
 mechanicRoute.get("/fetchChats",mechanicController.fetchChats.bind(mechanicController))
 
+mechanicRoute.get("/fetchRevenue",mechanicController.fetchRevenue.bind(mechanicController))
+mechanicRoute.get("/fetchuserGrowths",mechanicController.fetchuserGrowths.bind(mechanicController))
+
 
 export default mechanicRoute

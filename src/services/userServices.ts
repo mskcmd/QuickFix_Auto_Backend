@@ -322,6 +322,15 @@ class UserServices {
             console.log(error);
         }
     }
+
+    async bookingdata(id:string): Promise<any> {
+        try {
+            const response = await this.userRepo.bookingdata(id)
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
     //chats
 
     async allUsers(keyword: any): Promise<any> {
