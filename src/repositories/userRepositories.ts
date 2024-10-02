@@ -7,15 +7,12 @@ import mongoose, { Model, Document } from 'mongoose';
 import MechanicData from "../models/mechanicdataModel";
 import Booking, { IBooking } from "../models/mechanikBookingModel";
 import Mechanic from "../models/mechanicModel";
-import { MechnicDoc } from "../interfaces/IMechanic";
-import Chat from "../models/chatModel";
 import Payment from "../models/paymentModel";
 import FeedBack from "../models/feedbackModel";
 import Blog from "../models/blogModel";
 import Chat2 from "../models/chatModel2";
 import Message from '../models/messageModel2';
 import Service from '../models/serviceModel';
-import { log } from "console";
 
 
 class UserRepository {
@@ -183,14 +180,24 @@ class UserRepository {
       const formattedMechanics = await Promise.all(
         mechanics.map(async mechanic => {
           try {
-            // Fetch only specific fields from Mechanic model
             const mechData = await Mechanic.findOne({ _id: mechanic.mechanicID })
-              .select('name email phone') // Only retrieve name, email, and phone
+              .select('name email phone')
               .exec();
 
-            // Format and return the data
+            const averageRating = await FeedBack.aggregate([
+              { $match: { mechanic: mechanic.mechanicID } },
+              {
+                $group: {
+                  _id: "$mechanic",
+                  averageRating: { $avg: "$rating" },
+                }
+              }
+            ]);
+
+
             return {
               ...mechanic,
+              averageRating: averageRating,
               mechData: mechData || null,
               distanceKm: Number(mechanic.distanceKm.toFixed(2)),
               walkingTime: Number(mechanic.walkingTime.toFixed(2)),
@@ -198,7 +205,6 @@ class UserRepository {
               drivingTime: Number(mechanic.drivingTime.toFixed(2))
             };
           } catch (error) {
-            console.error(`Error fetching mechData for mechanicID ${mechanic.mechanicID}:`, error);
             return {
               ...mechanic,
               mechData: null, // Handle the error case
@@ -210,10 +216,6 @@ class UserRepository {
           }
         })
       );
-
-
-      console.log(`Found ${formattedMechanics.length} mechanics within ${maxDistance / 1000} km radius`);
-      console.log(formattedMechanics);
 
       return formattedMechanics;
     } catch (error) {
@@ -317,11 +319,31 @@ class UserRepository {
     }
   }
 
+  async updateFeedback(id: string, rating: string, feedback: string) {
+    try {
+      const result = await FeedBack.findByIdAndUpdate(id, {
+        rating: rating,
+        feedback: feedback
+      }, {
+        new: true
+      })
+
+      if (!result) {
+        throw new Error("User not found");
+      }
+      return result
+
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      throw error;
+    }
+  }
+
   async feedBackCheck(id: string): Promise<any> {
     try {
       const feedback = await FeedBack.find({ payment: id });
 
-      if (feedback.length > 0) {
+      if (feedback) {
         return { status: true, feedback };
       } else {
         return { status: false, message: "No feedback found for this user." };
@@ -485,8 +507,8 @@ class UserRepository {
         const yearsOfExperience = result[0].yearsOfExperience;
         const specialization = result[0].specialization;
         const profileImages = result[0].profileImages[0];
-        const services =  result[0].services
-        let arr = [name, yearsOfExperience, specialization, profileImages,services];
+        const services = result[0].services
+        let arr = [name, yearsOfExperience, specialization, profileImages, services];
         return arr;
       } else {
         throw new Error("No data found for the given ID");
@@ -494,6 +516,46 @@ class UserRepository {
     } catch (error) {
       console.log(error);
       throw error;  // Re-throw error if needed for further handling
+    }
+  }
+
+  async reviewData(id: string): Promise<any> {
+    try {
+      const feedbackWithUserDetails = await FeedBack.aggregate([
+        {
+          $match: { mechanic: new mongoose.Types.ObjectId(id) }
+        },
+        {
+          $lookup: {
+            from: 'users', // Collection name for users
+            localField: 'user', // Field from the feedback documents
+            foreignField: '_id', // Field from the users collection
+            as: 'userDetails', // Output array name
+          },
+        },
+        {
+          $unwind: {
+            path: '$userDetails', // Unwind the userDetails array
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            feedback: 1,
+            rating: 1,
+            date: 1,
+            'userDetails.name': 1, // Select fields from userDetails
+            'userDetails.email': 1,
+            'userDetails.imageUrl': 1,
+          },
+        },
+      ]);
+
+      console.log(feedbackWithUserDetails);
+      return feedbackWithUserDetails
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 

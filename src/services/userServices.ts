@@ -268,6 +268,15 @@ class UserServices {
         }
     }
 
+    async updateFeedback(values: any, id: string, rating: string, feedback: string): Promise<any> {
+        try {
+            const result = await this.userRepo.updateFeedback(id, rating, feedback)
+            return result
+        } catch (error) {
+
+        }
+    }
+
     async feedBackCheck(id: string): Promise<any> {
         try {
             const result = this.userRepo.feedBackCheck(id)
@@ -305,7 +314,7 @@ class UserServices {
         }
     }
 
-    async fetchAllshop(query:string): Promise<any> {
+    async fetchAllshop(query: string): Promise<any> {
         try {
             const response = await this.userRepo.fetchAllshop(query)
             return response
@@ -323,9 +332,18 @@ class UserServices {
         }
     }
 
-    async bookingdata(id:string): Promise<any> {
+    async bookingdata(id: string): Promise<any> {
         try {
             const response = await this.userRepo.bookingdata(id)
+            return response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async reviewData(id: string): Promise<any> {
+        try {
+            const response = await this.userRepo.reviewData(id)
             return response
         } catch (error) {
             console.log(error);

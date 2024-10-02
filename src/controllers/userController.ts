@@ -489,9 +489,27 @@ class UserController {
     }
   }
 
+  async updateFeedback(req: Request, res: Response): Promise<any> {
+    try {
+      const { values, id } = req.body;
+      const { rating, feedback } = values;
+      if (!values || !id) {
+        throw new Error("One or more required fields are empty.");
+      }
+      console.log(" values, id", values, id, rating, feedback);
+
+      const result = await this.userService.updateFeedback(values, id, rating, feedback);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ message: "Error submitting feedback" });
+    }
+  }
+
   async feedBackCheck(req: Request, res: Response): Promise<void> {
     const id = req.query.id as string;
     try {
+
       if (!id) {
         res.status(400).json({ error: "ID and type are required" });
         return;
@@ -563,6 +581,17 @@ class UserController {
     try {
       const id: any = req.query.id
       const response = await this.userService.bookingdata(id);
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      res.status(500).json({ message: 'Failed to fetch blogs' });
+    }
+  }
+
+  async reviewData(req: Request, res: Response): Promise<void> {
+    try {
+      const id: any = req.query.id
+      const response = await this.userService.reviewData(id);
       res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching blogs:', error);
