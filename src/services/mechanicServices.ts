@@ -59,14 +59,12 @@ class mechanicServices {
 
     async veryfyOtp(mechanicId: string) {
         const result = await this.otpRepo.verifyMechanic(mechanicId);
-        console.log("myyxyyy", result);
         return { status: true, result, message: "successful" };
     }
 
     async login(email: string, password: string) {
         try {
             const result = await this.mechanicRepo.login(email, password)
-            console.log("re", result);
 
             if (result?.status == true) {
                 const mech_token = this.createjwt.generateToken(result.mechanic?.id);
@@ -95,7 +93,6 @@ class mechanicServices {
 
     async forgetService(email: string) {
         try {
-            console.log("sds", email);
 
             const result = await this.mechanicRepo.findUserByEmail(email);
             console.log(result);
@@ -108,8 +105,8 @@ class mechanicServices {
             }
             return { success: true, result };
         } catch (error) {
-            console.log(error);
-            throw new Error('Error forgetting password');
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -122,8 +119,8 @@ class mechanicServices {
             }
             return userData;
         } catch (error) {
-            console.error("Error in checkExistingEmail:", error);
-            throw new Error("Failed to check existing email. Please try again later.");
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -141,19 +138,18 @@ class mechanicServices {
             }
             return { succuss: true, result }
         } catch (error) {
-            console.error('Error in UserService.resetPassword:', error);
-            throw error;
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
     async registerMechData(uploadUrls: Record<string, string>, body: any): Promise<IMechanicData> {
         try {
-            console.log("hs", uploadUrls, body);
             const result = await this.mechanicRepo.registerData(uploadUrls, body);
             return result;
         } catch (error) {
-            console.error('Error in registerMechData:', error);
-            throw new Error('Failed to register mechanic data');
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -163,8 +159,8 @@ class mechanicServices {
             const result = await this.mechanicRepo.getmechData(id);
             return result;
         } catch (error) {
-            console.error("Error in service layer:", error);
-            throw new Error('Failed to fetch mechanic data');
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -173,8 +169,8 @@ class mechanicServices {
             const result = await this.mechanicRepo.getDetailData(id);
             return result;
         } catch (error) {
-            console.error("Error in service layer:", error);
-            throw new Error('Failed to fetch mechanic data');
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -184,7 +180,7 @@ class mechanicServices {
             return result;
 
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -194,7 +190,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.statusUpdate(id, status)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -204,8 +200,8 @@ class mechanicServices {
             const result = await this.mechanicRepo.addService(serviceData);
             return result;
         } catch (error) {
-            console.error("Error adding service:", error);
-            return null;
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -214,7 +210,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchService(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -224,7 +220,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.searchUsers(keyword, id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -234,7 +230,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.searchServices(keyword, id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -244,7 +240,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.createBill(userId, name, vehicleNumber, services, subtotal, gst, total, mechId)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -254,8 +250,8 @@ class mechanicServices {
             const result = await this.mechanicRepo.createBlog(blogData);
             return result;
         } catch (error) {
-            console.error("Error adding service:", error);
-            return null;
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -264,7 +260,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchBlog(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -274,7 +270,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.deleteBlog(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -284,7 +280,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchEditBlog(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
         }
     }
 
@@ -293,8 +289,8 @@ class mechanicServices {
             const result = await this.mechanicRepo.editBlog(blogData);
             return result;
         } catch (error) {
-            console.error("Error adding service:", error);
-            return null;
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -303,7 +299,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.paymentFetch(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -313,8 +309,8 @@ class mechanicServices {
             const chat = await this.mechanicRepo.createChat(senderId, receverId);
             return chat;
         } catch (error) {
-            console.error("Error in service:", error);
-            throw error;
+            throw new Error((error as Error).message || 'An error occurred');
+
         }
     }
 
@@ -323,17 +319,17 @@ class mechanicServices {
             const result = await this.mechanicRepo.sendMessage(content, chatId, senderId)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
-    
+
     async allMessagess(chatId: string) {
         try {
             const result = await this.mechanicRepo.getAllMessages(chatId)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -343,7 +339,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchChats(senderId)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -353,7 +349,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchRevenue(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -363,7 +359,7 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchUserGrowths(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }

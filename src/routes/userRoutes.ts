@@ -52,4 +52,6 @@ userRoute.get("/fetchFreelancer",userController.fetchFreelancer.bind(userControl
 userRoute.get("/bookingdata",userController.bookingdata.bind(userController))
 userRoute.get("/reviewData",userController.reviewData.bind(userController))
 
+
+
 export default userRoute

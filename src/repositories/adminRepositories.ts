@@ -21,6 +21,8 @@ class adminRepositories {
       return { status: true, admin };
     } catch (error) {
       console.error(error);
+      throw new Error((error as Error).message || 'An error occurred');
+
     }
   }
 
@@ -31,6 +33,8 @@ class adminRepositories {
 
     } catch (error) {
       console.log(error);
+      throw new Error((error as Error).message || 'An error occurred');
+
     }
   };
 
@@ -44,6 +48,8 @@ class adminRepositories {
 
     } catch (error) {
       console.log(error);
+      throw new Error((error as Error).message || 'An error occurred');
+
     }
   };
 
@@ -51,7 +57,6 @@ class adminRepositories {
     try {
       const user = await User.findById(id);
       if (!user) {
-        console.log("User not found");
         return;
       }
       const updatedStatus = !user.isBlocked;
@@ -60,9 +65,10 @@ class adminRepositories {
       return result
     } catch (error) {
       console.log(error);
+      throw new Error((error as Error).message || 'An error occurred');
+
     }
   }
-
 
   async getMonthlyData() {
     try {
@@ -83,11 +89,10 @@ class adminRepositories {
         })
       );
 
-      console.log(monthlyData);
       return monthlyData;
     } catch (error) {
       console.error('Error fetching monthly data:', error);
-      throw error;
+      throw new Error((error as Error).message || 'An error occurred');
     }
   }
 
@@ -95,7 +100,6 @@ class adminRepositories {
     try {
       const mechanic = await Mechanic.findById(id);
       if (!mechanic) {
-        console.log("Mechanic not found");
         return;
       }
       const updatedStatus = !mechanic.isBlocked;
@@ -104,6 +108,8 @@ class adminRepositories {
       return result
     } catch (error) {
       console.log(error);
+      throw new Error((error as Error).message || 'An error occurred');
+
     }
   }
 

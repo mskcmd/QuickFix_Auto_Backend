@@ -77,15 +77,18 @@ class UserServices {
     }
 
     async veryfyOtp(userId: string) {
-        const result = await this.otpRepo.verifyUser(userId)
-        console.log("myyyyy", result)
-        return { status: true, result, message: 'successful' };
+        try {
+            const result = await this.otpRepo.verifyUser(userId)
+            return { status: true, result, message: 'successful' };
+        } catch (error) {
+            console.log(error);
+            throw new Error(`veryfyOtp failed: ${(error as Error).message}`);
+        }
+
     }
 
     async googleToken(result: any) {
         try {
-            console.log("result", result);
-
             if (result) {
                 const token = this.createjwt.generateToken(result?.newUser?._id);
                 const refreshToken = this.createjwt.generateRefreshToken(result?.newUser?._id)
@@ -103,14 +106,13 @@ class UserServices {
                 }
             }
         } catch (error) {
-            console.error('Error during Google authentication:', error);
+            console.log(error);
+            throw new Error(`googleToken failed: ${(error as Error).message}`);
         }
     }
 
     async googleTokenlogin(result: any) {
         try {
-            console.log("result", result);
-
             if (result) {
                 const token = this.createjwt.generateToken(result?._id);
                 const refreshToken = this.createjwt.generateRefreshToken(result?._id)
@@ -128,7 +130,8 @@ class UserServices {
                 }
             }
         } catch (error) {
-            console.error('Error during Google authentication:', error);
+            console.log(error);
+            throw new Error(`googleTokenlogin failed: ${(error as Error).message}`);
         }
     }
 
@@ -169,16 +172,15 @@ class UserServices {
                 }
             }
         } catch (error) {
-            console.log(error)
+            console.log(error);
+            throw new Error(`login failed: ${(error as Error).message}`);
         }
     }
 
     async forgetService(email: string) {
         try {
-            console.log("ss", email);
 
             const result = await this.userRepo.findUserByEmail(email);
-            console.log(result);
 
             if (!result) {
                 return { success: false, message: 'User not found' };
@@ -189,7 +191,7 @@ class UserServices {
             return { success: true, result };
         } catch (error) {
             console.log(error);
-            throw new Error('Error forgetting password');
+            throw new Error('Error  forgetService');
         }
     }
 
@@ -213,16 +215,31 @@ class UserServices {
     }
 
     async searchMechanics(lat: number, lon: number, type: string) {
-        const mechanics = await this.userRepo.findMechanicsNearLocation(lat, lon, type);
-        return mechanics
+        try {
+            const mechanics = await this.userRepo.findMechanicsNearLocation(lat, lon, type);
+            return mechanics
+        } catch (error) {
+            console.log(error);
+            throw new Error(`searchMechanics failed: ${(error as Error).message}`);
+        }
     }
 
     async booking(bookingData: IBooking): Promise<IBooking> {
-        return await this.userRepo.createBooking(bookingData);
+        try {
+            return await this.userRepo.createBooking(bookingData);
+        } catch (error) {
+            console.error("Error in service:", error);
+            throw error;
+        }
     }
 
     async fetchBookData(id: string, type: string): Promise<any> {
-        return await this.userRepo.fetchBookData(id, type);
+        try {
+            return await this.userRepo.fetchBookData(id, type);
+        } catch (error) {
+            console.log(error);
+            throw new Error(`fetchBookData failed: ${(error as Error).message}`);
+        }
     }
 
     async updateProfile(userData: any, fileUrl: string | null): Promise<any> {
@@ -243,8 +260,8 @@ class UserServices {
             const result = await this.userRepo.findUserById(id);
             return result
         } catch (error) {
-            console.error("Error fetching book data:", error);
-
+            console.log(error);
+            throw new Error(`getProfile failed: ${(error as Error).message}`);
         }
     }
 
@@ -254,7 +271,7 @@ class UserServices {
             return result
         } catch (error) {
             console.log(error);
-
+            throw new Error(`fetchPayment failed: ${(error as Error).message}`);
         }
     }
 
@@ -264,7 +281,8 @@ class UserServices {
             const result = await this.userRepo.feedback(rating, feedback, userId, mechId, paymentID)
             return result
         } catch (error) {
-
+            console.log(error);
+            throw new Error(`feedback failed: ${(error as Error).message}`);
         }
     }
 
@@ -273,7 +291,8 @@ class UserServices {
             const result = await this.userRepo.updateFeedback(id, rating, feedback)
             return result
         } catch (error) {
-
+            console.log(error);
+            throw new Error(`updateFeedback failed: ${(error as Error).message}`);
         }
     }
 
@@ -283,7 +302,7 @@ class UserServices {
             return result
         } catch (error) {
             console.log(error);
-
+            throw new Error(`feedBackCheck failed: ${(error as Error).message}`);
         }
     }
 
@@ -293,6 +312,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchBlogs failed: ${(error as Error).message}`);
         }
     }
 
@@ -302,6 +322,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchAllBlogs failed: ${(error as Error).message}`);
         }
     }
 
@@ -311,6 +332,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchAllService failed: ${(error as Error).message}`);
         }
     }
 
@@ -320,6 +342,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchAllshop failed: ${(error as Error).message}`);
         }
     }
 
@@ -329,6 +352,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchFreelancer failed: ${(error as Error).message}`);
         }
     }
 
@@ -338,6 +362,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`bookingdata failed: ${(error as Error).message}`);
         }
     }
 
@@ -347,6 +372,7 @@ class UserServices {
             return response
         } catch (error) {
             console.log(error);
+            throw new Error(`reviewData failed: ${(error as Error).message}`);
         }
     }
     //chats
@@ -357,6 +383,8 @@ class UserServices {
             return result
         } catch (error) {
             console.log(error);
+            throw new Error(`allUsers failed: ${(error as Error).message}`);
+
         }
     }
 
@@ -365,8 +393,8 @@ class UserServices {
             const chat = await this.userRepo.createChat(senderId, receverId);
             return chat;
         } catch (error) {
-            console.error("Error in service:", error);
-            throw error;
+            console.log(error);
+            throw new Error(`createChat failed: ${(error as Error).message}`);
         }
     }
 
@@ -376,6 +404,8 @@ class UserServices {
             return result
         } catch (error) {
             console.log(error);
+            throw new Error(`fetchChats failed: ${(error as Error).message}`);
+
 
         }
     }
@@ -386,6 +416,8 @@ class UserServices {
             return result
         } catch (error) {
             console.log(error);
+            throw new Error(`sendMessage failed: ${(error as Error).message}`);
+
 
         }
     }
@@ -395,7 +427,7 @@ class UserServices {
             const result = await this.userRepo.getAllMessages(chatId)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error(`allMessagess failed: ${(error as Error).message}`);
 
         }
     }

@@ -10,7 +10,6 @@ const upload = multer({
 });
 
 const uploadSingleImage = upload.single('image');
-console.log("sss",uploadSingleImage);
 export default uploadSingleImage;
 
 
@@ -42,7 +41,6 @@ interface UploadedFile {
 
 // Function to upload a file to S3
 const uploadFile = async (file: UploadedFile): Promise<string> => {
-  console.log("Uploading file:", file.originalname);
 
   const params = {
     Bucket: process.env.BUCKET_NAME as string,
@@ -54,7 +52,6 @@ const uploadFile = async (file: UploadedFile): Promise<string> => {
 
   try {
     const data = await s3.upload(params).promise();
-    console.log("File uploaded successfully:", data);
 
     const url = `https://${process.env.BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${data.Key}`;
     return url; // URL of the uploaded file

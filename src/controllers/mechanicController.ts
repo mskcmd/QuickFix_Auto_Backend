@@ -1,9 +1,7 @@
-import { log } from "util";
 import { IBlog, IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
 import MechanicServices from "../services/mechanicServices";
-import e, { Request, Response } from "express"
+import  { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
-import MechanicData from "../models/mechanicdataModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
 import User from "../models/userModel";
 
@@ -16,7 +14,6 @@ class mechanicController {
   }
   async mechanicSignup(req: Request, res: Response): Promise<void> {
     try {
-      console.log("All mechanic  data", req.body);
       const { name, email, phone, password }: MechnicDoc = req.body
       const result = await this.mechanicServices.createMechanic(name, email, phone, password);
       req.session.mechotp = result?.otp
@@ -43,7 +40,6 @@ class mechanicController {
     console.log(req.session.mechotp)
     const mechanicId: any = req.session.mechanicId
     if (otpString === req.session.mechotp) {
-      console.log("otp is true");
       const result = await this.mechanicServices.veryfyOtp(mechanicId)
       console.log(result);
 
@@ -112,16 +108,11 @@ class mechanicController {
   async forgetPassword(req: Request, res: Response): Promise<void> {
     try {
       const email = req.query.email as string;
-      console.log(email);
-
       if (!email) {
         res.status(400).json({ error: 'Email is required' });
         return;
       }
       const result = await this.mechanicServices.forgetService(email);
-      console.log(result);
-
-      console.log("email check", result.result?.name);
       const name = result.result?.name;
       if (result.success && name) {
         const otp: string = await sendVerifyMail(name, email);
@@ -145,8 +136,6 @@ class mechanicController {
     try {
 
       const { otp, userId } = req.query;
-      console.log("gf", req.query);
-
       if (typeof otp !== 'string' || typeof userId !== 'string') {
         res.status(400).json({ error: 'Invalid request parameters' });
         return;
@@ -163,7 +152,6 @@ class mechanicController {
       }
 
       if (otpString === req.session.otp) {
-        console.log("good");
         const result = await this.mechanicServices.checkExistingUser(userId);
         res.json({ success: true, result })
       } else {
@@ -179,10 +167,6 @@ class mechanicController {
     try {
       const newPassword = req.body.password;
       const userId = req.body.userId;
-
-      console.log('Received newPassword:', newPassword);
-      console.log('Received userId:', userId);
-
       const result = await this.mechanicServices.resetPassword(newPassword, userId)
       res.json({ result })
     } catch (error) {
@@ -193,8 +177,6 @@ class mechanicController {
 
   async mech_register(req: Request, res: Response) {
     try {
-      console.log('Form Data:', req.body.ID);
-      console.log('Uploaded Files:', req.files);
       const files = req.files as UploadedFile;
       const uploadPromises = Object.keys(files).map(async (key) => {
         const file = files[key][0];
@@ -205,9 +187,7 @@ class mechanicController {
       });
       const uploadResults = await Promise.all(uploadPromises);
       const uploadUrls = uploadResults.reduce((acc, obj) => ({ ...acc, ...obj }), {});
-      console.log(uploadUrls);
       const result = await this.mechanicServices.registerMechData(uploadUrls, req.body);
-      console.log(result, "successfully updted");
       res.status(201).json({
         result,
         status: true,
@@ -295,9 +275,6 @@ class mechanicController {
   async statusUpdate(req: Request, res: Response): Promise<void> {
     const id = req.body.params?.Id as string;
     const status = req.body.params?.Status as string;
-
-    console.log("Received ID and Status:", id, status);
-
     try {
       if (!id || !status) {
         res.status(400).json({ error: "Missing ID or Status" });
@@ -373,7 +350,6 @@ class mechanicController {
 
   async createBill(req: Request, res: Response): Promise<void> {
     try {
-      console.log("bill", req.body);
 
       const {
         userId,
@@ -448,10 +424,7 @@ class mechanicController {
   async editBlog(req: Request, res: Response): Promise<void> {
     try {
       const { id, name, positionName, heading, description, image } = req.body;
-      console.log("tyu", id, name, positionName, heading, description, image, req.file);
-
       let fileUrl: string | undefined;
-
       if (req.file) {
         fileUrl = await uploadFile(req.file);
       } else {
@@ -470,7 +443,7 @@ class mechanicController {
     }
   }
 
-  async paymentFetch(req: Request, res: Response): Promise<any> {
+  async paymentFetch(req: Request, res: Response): Promise<void> {
     try {
       const id = req.query.id as string;
       const result = await this.mechanicServices.paymentFetch(id)
@@ -507,7 +480,6 @@ class mechanicController {
       const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
 
       if (!senderId || !receiverId) {
-        console.log("UserId or receverId param not sent with request");
         res.sendStatus(400);
         return;
       }
@@ -528,7 +500,6 @@ class mechanicController {
       const { content, chatId, senderId } = req.body;
 
       if (!content || !chatId) {
-        console.log("Invalid data passed into request");
         return res.sendStatus(400);
       }
       const result = await this.mechanicServices.sendMessage(content, chatId, senderId)
@@ -565,13 +536,9 @@ class mechanicController {
       if (!id) {
         res.status(400).json({ message: "ID parameter is required" });
         return;
-      }  
+      }
       const result = await this.mechanicServices.fetchRevenue(id);
-      // if (!result) {
-      //   res.status(404).json({ message: "No revenue data found for the provided ID" });
-      //   return;
-      // }
-        res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       console.error("Error fetching revenue:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -580,19 +547,13 @@ class mechanicController {
 
   async fetchuserGrowths(req: Request, res: Response): Promise<void> {
     try {
-
-      
       const id = req.query.id as string;
       if (!id) {
         res.status(400).json({ message: "ID parameter is required" });
         return;
-      }  
+      }
       const result = await this.mechanicServices.fetchuserGrowths(id);
-      // if (!result) {
-      //   res.status(404).json({ message: "No revenue data found for the provided ID" });
-      //   return;
-      // }
-        res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       console.error("Error fetching revenue:", error);
       res.status(500).json({ message: "Internal server error" });

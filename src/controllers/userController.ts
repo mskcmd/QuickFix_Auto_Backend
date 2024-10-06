@@ -1,18 +1,15 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import UserServices from "../services/userServices";
-import { CustomRequest, IBookingData, UserDoc } from "../interfaces/IUser";
+import { UserDoc } from "../interfaces/IUser";
 import { sendVerifyMail } from "../utils/otpVerification";
 import { IBooking } from "../models/mechanikBookingModel";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
-import Chat from "../models/chatModel";
-import User from "../models/userModel";
-import Message from "../models/messageModel";
-import Mechanic from "../models/mechanicModel";
-import bcrypt from "bcrypt"
 import Payment from "../models/paymentModel";
 
 class UserController {
   private userService: UserServices;
+
+
 
   milliseconds = (h: number, m: number, s: number) =>
     (h * 3600 + m * 60 + s) * 1000;
@@ -21,9 +18,8 @@ class UserController {
     this.userService = userService;
   }
 
-  async signup(req: Request, res: Response): Promise<void> {
+  async signup(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("All data", req.body);
       const { name, email, phone, password }: UserDoc = req.body;
       const result = await this.userService.createUser(
         name,
@@ -53,6 +49,7 @@ class UserController {
       }
     } catch (error) {
       console.error("Error in UserController.signup:", error);
+      next(error);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -73,7 +70,6 @@ class UserController {
       const userId: any = req.session.userId;
       if (otpString === req.session.otp) {
         const result = await this.userService.veryfyOtp(userId);
-        console.log("userdata", result);
         if (result && result.status) {
           res.json({
             isUser: true,
@@ -96,7 +92,6 @@ class UserController {
   async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      console.log(email, password);
       const result = await this.userService.login(email, password);
       if (result?.result?.isVerified === false) {
         res.json({ isverified: false, message: "User not verified", result });
@@ -147,10 +142,7 @@ class UserController {
         if (user.isBlocked) {
           res.json({ status: false, message: "User not found." })
         } else {
-          console.log("use", user);
-          console.log("id", user._id);
           const result: any = await this.userService.googleTokenlogin(user);
-          console.log("tokenr", result);
           const access_token = result?.data?.data?.token;
           const refresh_token = result?.data?.data?.refreshToken;
           res
@@ -210,7 +202,6 @@ class UserController {
     try {
       const email = req.session.email;
       const name = req.session.name;
-      console.log(email, name);
 
       if (!email || !name) {
         res.status(400).json({ error: "Email or name is missing" });
@@ -231,16 +222,11 @@ class UserController {
   async forgetPassword(req: Request, res: Response): Promise<void> {
     try {
       const email = req.query.email as string;
-      console.log(email);
-
       if (!email) {
         res.status(400).json({ error: "Email is required" });
         return;
       }
       const result = await this.userService.forgetService(email);
-      console.log(result);
-
-      console.log("email check", result.result?.name);
       const name = result.result?.name;
       if (result.success && name) {
         const otp: string = await sendVerifyMail(name, email);
@@ -264,10 +250,6 @@ class UserController {
     try {
       const newPassword = req.body.password;
       const userId = req.body.userId;
-
-      console.log("Received newPassword:", newPassword);
-      console.log("Received userId:", userId);
-
       const result = await this.userService.resetPassword(newPassword, userId);
       res.json({ result });
     } catch (error) {
@@ -279,8 +261,6 @@ class UserController {
   async veryfyOtpreset(req: Request, res: Response): Promise<void> {
     try {
       const { otp, userId } = req.query;
-      console.log("gf", req.query);
-
       if (typeof otp !== "string" || typeof userId !== "string") {
         res.status(400).json({ error: "Invalid request parameters" });
         return;
@@ -297,7 +277,6 @@ class UserController {
       }
 
       if (otpString === req.session.otp) {
-        console.log("good");
         const result = await this.userService.checkExistingUser(userId);
         res.json({ success: true, result });
       } else {
@@ -355,7 +334,6 @@ class UserController {
   }
 
   async mechBooking(req: Request, res: Response): Promise<void> {
-    console.log("bookingg", req.body);
     try {
       const bookingData: IBooking = {
         user: req.body.userId,
@@ -448,7 +426,6 @@ class UserController {
     try {
       const id: any = req.query.id
       const result = await this.userService.fetchPayment(id)
-      console.log(result);
       res.json(result)
     } catch (error) {
       console.log(error);
@@ -466,7 +443,6 @@ class UserController {
       if (!result) {
         return res.status(404).json({ message: "Payment not found or already completed" });
       }
-      console.log(result);
       res.json(result);
     } catch (error) {
       console.error(error);
@@ -496,7 +472,6 @@ class UserController {
       if (!values || !id) {
         throw new Error("One or more required fields are empty.");
       }
-      console.log(" values, id", values, id, rating, feedback);
 
       const result = await this.userService.updateFeedback(values, id, rating, feedback);
       res.json(result);
@@ -554,9 +529,7 @@ class UserController {
 
   async fetchAllshop(req: Request, res: Response): Promise<void> {
     try {
-      console.log(req.query);
       const { query }: any = req.query
-      console.log(query);
       const response = await this.userService.fetchAllshop(query);
       res.status(200).json(response);
     } catch (error) {
@@ -568,8 +541,6 @@ class UserController {
   async fetchFreelancer(req: Request, res: Response): Promise<void> {
     try {
       const response = await this.userService.fetchFreelancer();
-      console.log(response);
-
       res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching blogs:', error);
@@ -599,10 +570,8 @@ class UserController {
     }
   }
 
-  //chats
   async allUsers(req: Request, res: Response): Promise<void> {
     try {
-      console.log(req.query.search);
       const result = await this.userService.allUsers(req.query.search)
       res.json(result);
     } catch (error) {
@@ -616,7 +585,6 @@ class UserController {
 
       const { senderId, receiverId }: { senderId: string; receiverId: string } = req.body;
       if (!senderId || !receiverId) {
-        console.log("UserId or receverId param not sent with request");
         res.sendStatus(400);
         return;
       }
@@ -647,7 +615,6 @@ class UserController {
     try {
       const { content, chatId, senderId } = req.body;
       if (!content || !chatId) {
-        console.log("Invalid data passed into request");
         return res.sendStatus(400);
       }
       const result = await this.userService.sendMessage(content, chatId, senderId)
@@ -666,9 +633,6 @@ class UserController {
       console.log(error);
     }
   }
-
-
-
 }
 
 export default UserController;

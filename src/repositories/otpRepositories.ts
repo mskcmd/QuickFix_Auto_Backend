@@ -2,6 +2,7 @@ import Mechanic from "../models/mechanicModel";
 import User from "../models/userModel";
 
 class OtpRepository {
+    
     async verifyUser(mechanicId: string) {
         try {
             const updatedUser = await User.findByIdAndUpdate(
@@ -22,6 +23,7 @@ class OtpRepository {
             throw new Error("Error verifying user.");
         }
     }
+
     async verifyMechanic(userId: string) {
         try {
             const updatedUser = await Mechanic.findByIdAndUpdate(

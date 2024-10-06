@@ -16,9 +16,7 @@ class AdminController {
   async Login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body
-      console.log("hff", email, password);
       const result = await this.adminServices.Login(email, password)
-      console.log("yy", result)
 
       if (result?.data.data?.succuss === true) {
         const time = this.milliseconds(23, 30, 0);
@@ -59,10 +57,8 @@ class AdminController {
 
   async getMechData(req: Request, res: Response): Promise<void> {
     try {
-      console.log("hjka");
       const result = await this.adminServices.getMechData()
       res.json(result)
-
     } catch (error) {
       console.error("Error fetching user data:", error);
       res.status(500).json({ error: 'Internal server error' });
@@ -109,7 +105,6 @@ class AdminController {
   async monthlyData(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.adminServices.monthlyData()
-      console.log("monthlyData", result);
       res.json(result)
     } catch (error) {
       console.log(error);

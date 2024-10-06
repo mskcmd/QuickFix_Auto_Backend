@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IBlog, IChat, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
+import { IBlog, IMechanicData, IService, MechnicDoc } from "../interfaces/IMechanic";
 import Mechanic from "../models/mechanicModel";
 import MechanicData from "../models/mechanicdataModel";
 import { Types } from 'mongoose';
@@ -11,6 +11,7 @@ import Booking from "../models/mechanikBookingModel";
 import Payment from "../models/paymentModel";
 import Blog from "../models/blogModel";
 import Message from '../models/messageModel2';
+import { error } from "console";
 
 class mechanicRepositories {
 
@@ -31,6 +32,8 @@ class mechanicRepositories {
             return mechanic;
         } catch (error) {
             console.log(error);
+            throw new Error((error as Error).message || 'An error createMechanic');
+
         }
     }
 
@@ -100,13 +103,11 @@ class mechanicRepositories {
 
         try {
 
-            // Utility function to format images
             const formatImage = (url: string): { url: string; contentType: string } => ({
                 url,
                 contentType: 'image/jpeg',
             });
 
-            // Collect profile images
             const profileImages = [
                 uploadUrls.profileImage0,
                 uploadUrls.profileImage1,
@@ -116,7 +117,6 @@ class mechanicRepositories {
                 .filter(Boolean)
                 .map(formatImage);
 
-            // Parse mechanic ID
             const mechanicID = Types.ObjectId.createFromHexString(body.ID);
 
             // Parse and validate coordinates
@@ -182,7 +182,6 @@ class mechanicRepositories {
 
             // Clean up uploaded images if the registration fails
             await Promise.all(imagesToDelete.map(deleteFileFromS3));
-
             throw new Error('Failed to register mechanic data');
         }
     }
@@ -235,14 +234,13 @@ class mechanicRepositories {
                 })
                 .sort({ bookingTime: -1 }) // Sort by bookingTime in descending order
                 .exec();
-    
+
             return bookings;
         } catch (error) {
             console.error('Error fetching bookings:', error);
             throw error;
         }
     }
-    
 
     async statusUpdate(id: string, status: string): Promise<any> {
         try {
@@ -276,6 +274,8 @@ class mechanicRepositories {
             }
         } catch (deleteError) {
             console.error("Error deleting image from S3:", deleteError);
+            throw new Error((error as unknown as Error).message || 'An error occurred');
+
         }
         return !!existingService;
     }
@@ -305,6 +305,8 @@ class mechanicRepositories {
                 await deleteFileFromS3(imageUrl);
             } catch (deleteError) {
                 console.error("Error deleting image from S3:", deleteError);
+                throw new Error((error as Error).message || 'An error occurred');
+
             }
 
             return null;
@@ -317,6 +319,7 @@ class mechanicRepositories {
             return result
         } catch (error) {
             console.log(error);
+            throw new Error((error as Error).message || 'An error occurred');
 
         }
     }
@@ -346,11 +349,10 @@ class mechanicRepositories {
                     return false;
                 });
 
-            console.log("Filtered Users:", filteredUsers);
             return filteredUsers;
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             throw new Error("Failed to fetch users");
         }
     }
@@ -364,11 +366,10 @@ class mechanicRepositories {
                 return regex.test(service.serviceName);
             });
 
-            console.log("Filtered Services:", filteredServices);
             return filteredServices;
         } catch (error) {
-            console.log(error);
-
+            console.error('Error searchServices:', error);
+            throw error;
         }
     }
 
@@ -390,8 +391,8 @@ class mechanicRepositories {
 
 
         } catch (error) {
-            console.log(error);
-
+            console.error('Error createBill:', error);
+            throw error;
         }
     }
 
@@ -427,8 +428,8 @@ class mechanicRepositories {
             const result = await Blog.find({ mechanic: id })
             return result
         } catch (error) {
-            console.log(error);
-
+            console.error('Error fetchBlog:', error);
+            throw error;
         }
     }
 
@@ -440,8 +441,8 @@ class mechanicRepositories {
             const result1 = await Blog.deleteOne({ _id: id });
             return result1
         } catch (error) {
-            console.log(error);
-
+            console.error('Error deleteBlog:', error);
+            throw error;
         }
     }
 
@@ -450,7 +451,8 @@ class mechanicRepositories {
             const result = await Blog.find({ _id: id })
             return result
         } catch (error) {
-            console.log(error);
+            console.error('Error fetchEditBlog:', error);
+            throw error;
 
         }
     }
@@ -512,8 +514,8 @@ class mechanicRepositories {
 
             return paymentData;
         } catch (error) {
-            console.log(error);
-
+            console.error('Error paymentFetch :', error);
+            throw error;
         }
     }
 
@@ -602,6 +604,7 @@ class mechanicRepositories {
             return populatedNewChat[0]; // Return the first result
         } catch (error) {
             console.error("Error in repository:", error);
+            throw error;
         }
     }
 
@@ -773,7 +776,8 @@ class mechanicRepositories {
             ]);
             return chats
         } catch (error) {
-            console.error(error);
+            console.error('Error fetchChats revenue:', error);
+            throw error;
         }
     }
 
@@ -794,8 +798,6 @@ class mechanicRepositories {
                 const month: any = payment.createdAt.getMonth();
                 monthlyRevenue[month] += payment.total;
             });
-            console.log(monthlyRevenue);
-
             return monthlyRevenue;
         } catch (error) {
             console.error('Error fetching revenue:', error);
@@ -803,10 +805,7 @@ class mechanicRepositories {
         }
     }
 
-
     async fetchUserGrowths(mechanicId: any) {
-
-        console.log("mechanicId", mechanicId);
 
         try {
             const startOfYear = new Date(new Date().getFullYear(), 0, 1);
@@ -854,10 +853,6 @@ class mechanicRepositories {
             bookings.forEach(booking => {
                 monthlyUserGrowth[booking.month - 1] = booking.userCount;
             });
-
-            //   console.log(monthlyUserGrowth);
-
-
             return monthlyUserGrowth;
         } catch (error) {
             console.error('Error fetching user growth:', error);

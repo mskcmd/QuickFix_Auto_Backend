@@ -14,15 +14,12 @@ class AdminServices {
     async Login(email: string, password: string) {
         try {
             const result = await this.adimnRepo.login(email, password)
-            console.log("yy", result)
 
             console.log(result?.status == true);
             if (result?.status == true) {
-                console.log("qyy", result)
 
                 const admin_token = this.createjwt.generateToken(result.admin?.id);
                 const admin_refreshToken = this.createjwt.generateRefreshToken(result.admin?.id)
-                console.log("jhk", admin_token, admin_refreshToken)
 
                 return {
                     data: {
@@ -44,7 +41,7 @@ class AdminServices {
                 }
             }
         } catch (error) {
-            console.log(error)
+            throw new Error(`Login failed: ${(error as Error).message}`);
         }
     }
 
@@ -54,7 +51,7 @@ class AdminServices {
             return result
 
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to get user data: ${(error as Error).message}`);
         }
     }
 
@@ -63,7 +60,7 @@ class AdminServices {
             const result = await this.adimnRepo.getMechData()
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to get mechanic data: ${(error as Error).message}`);
         }
     }
 
@@ -72,7 +69,7 @@ class AdminServices {
             const result = await this.adimnRepo.blockUser(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to block user: ${(error as Error).message}`);
         }
     }
 
@@ -81,7 +78,7 @@ class AdminServices {
             const result = await this.adimnRepo.getMonthlyData()
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to retrieve monthly data: ${(error as Error).message}`);
 
         }
     }
@@ -91,7 +88,7 @@ class AdminServices {
             const result = await this.adimnRepo.blockMech(id)
             return result
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to block mechanic: ${(error as Error).message}`);
         }
     }
 
