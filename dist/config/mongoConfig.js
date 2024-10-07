@@ -14,12 +14,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-const dbURI = 'mongodb://localhost:27017/quickFix_auto';
+const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/quickFix_auto';
 function connectDB() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield mongoose_1.default.connect(`${dbURI}?useNewUrlParser=true`, {});
-            console.log("Connected to MongoDb");
+            yield mongoose_1.default.connect(dbURI);
+            console.log("Connected to MongoDB");
         }
         catch (error) {
             console.error('Error connecting to MongoDB:', error);
