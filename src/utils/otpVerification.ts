@@ -2,23 +2,29 @@ import nodemailer from "nodemailer";
 
 export const sendVerifyMail = async (name: string, email: string): Promise<string> => {
     try {
+
+        const authConfig = {
+            user: process.env.AUTH_USER,
+            pass: process.env.AUTH_PASS,
+        };
+
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 587,
             secure: false,
             requireTLS: true,
             auth: {
-                user: "wwwsuhail883@gmail.com",
-                pass: "mmae lpux fsdc ouus",
+                user: authConfig.user,
+                pass: authConfig.pass,
             },
         });
 
         let OTP = Math.floor(1000 + Math.random() * 900000).toString();
         console.log(OTP);
-        
+
 
         const mailOptions = {
-            from: "wwwsuhail883@gmail.com",
+            from: authConfig.user,
             to: email,
             subject: "for verification mail",
             html: `
@@ -29,11 +35,9 @@ export const sendVerifyMail = async (name: string, email: string): Promise<strin
             `
         };
         await transporter.sendMail(mailOptions);
-        console.log("jjj",typeof(OTP));
-        
         return OTP;
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.log(error.message);
         throw error
     }
