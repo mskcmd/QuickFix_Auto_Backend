@@ -19,7 +19,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const socketLogic_1 = require("./utils/socketLogic");
 require('dotenv').config();
 const app = (0, express_1.default)();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5002;
 (0, mongoConfig_1.connectDB)();
 app.use((0, express_session_1.default)({
     secret: process.env.SESSION_SECRET || (0, uuid_1.v4)(),
