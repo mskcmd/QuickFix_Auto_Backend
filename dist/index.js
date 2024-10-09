@@ -27,23 +27,35 @@ app.use((0, express_session_1.default)({
     saveUninitialized: true,
     cookie: { maxAge: 24 * 60 * 60 * 1000 },
 }));
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend-blue.vercel.app",
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
+    optionsSuccessStatus: 200
+};
 app.use(body_parser_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
-const corsOptions = {
-    origin: process.env.CORS_ORIGIN || "*",
-    credentials: true,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-    allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization,Course-Id",
-    optionsSuccessStatus: 200,
-};
-app.use('*', (0, cors_1.default)(corsOptions));
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
-    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    next();
+app.use(express_1.default.urlencoded({ extended: true }));
+app.use((0, cors_1.default)(corsOptions));
+// app.use('*', cors(corsOptions));
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "quick-fix-auto-frontend-blue.vercel.app");
+//   res.setHeader(
+//       "Access-Control-Allow-Headers",
+//       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//   );
+//   res.setHeader(
+//       "Access-Control-Allow-Methods",
+//       "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+//   );
+//   res.setHeader("Access-Control-Allow-Credentials", "true");
+//   next();
+// });
+app.options('*', (0, cors_1.default)(corsOptions));
+app.use('/', (req, res) => {
+    res.send("hello world....");
 });
 // Routes
 app.use('/api/auth', authRoutes_1.default);

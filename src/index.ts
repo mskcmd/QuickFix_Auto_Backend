@@ -29,33 +29,42 @@ app.use(
   })
 );
 
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend-blue.vercel.app",
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
+  optionsSuccessStatus: 200
+};
+
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
+app.use(cors(corsOptions));
 
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "*",
-  credentials: true,
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization,Course-Id",
-  optionsSuccessStatus: 200,
-};
 
-app.use('*', cors(corsOptions));
+// app.use('*', cors(corsOptions));
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
-  res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  next();
-});
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "quick-fix-auto-frontend-blue.vercel.app");
+//   res.setHeader(
+//       "Access-Control-Allow-Headers",
+//       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//   );
+//   res.setHeader(
+//       "Access-Control-Allow-Methods",
+//       "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+//   );
+//   res.setHeader("Access-Control-Allow-Credentials", "true");
+//   next();
+// });
+
+app.options('*', cors(corsOptions));
+
+app.use('/', (req, res) => {
+    res.send("hello world....");
+})
 
 // Routes
 app.use('/api/auth', authRoute);
