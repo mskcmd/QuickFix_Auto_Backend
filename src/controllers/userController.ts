@@ -317,7 +317,6 @@ class UserController {
       // Convert query parameters to numbers
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
-      console.log(userLat, userLat);
 
       // Use the service to get mechanics
       const result = await this.userService.searchMechanics(

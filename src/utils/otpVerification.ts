@@ -3,10 +3,8 @@ import nodemailer from "nodemailer";
 export const sendVerifyMail = async (name: string, email: string): Promise<string> => {
     try {
 
-        const authConfig = {
-            user: process.env.AUTH_USER,
-            pass: process.env.AUTH_PASS,
-        };
+      
+        
 
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -14,8 +12,8 @@ export const sendVerifyMail = async (name: string, email: string): Promise<strin
             secure: false,
             requireTLS: true,
             auth: {
-                user: authConfig.user,
-                pass: authConfig.pass,
+                user: process.env.USER_EMAIL,
+                pass:process.env.USER_PASSWORD,
             },
         });
 
@@ -24,7 +22,7 @@ export const sendVerifyMail = async (name: string, email: string): Promise<strin
 
 
         const mailOptions = {
-            from: authConfig.user,
+            from: process.env.USER_EMAIL,
             to: email,
             subject: "for verification mail",
             html: `
@@ -38,7 +36,7 @@ export const sendVerifyMail = async (name: string, email: string): Promise<strin
         return OTP;
 
     } catch (error: any) {
-        console.log(error.message);
+        console.log("nodemiller erorr",error.message);
         throw error
     }
 };

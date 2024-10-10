@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 
 
-const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/quickFix_auto';
+const dbURI:string = process.env.MONGODB_URI  || "";
 
 export async function connectDB(): Promise<void> {
     try {
@@ -9,6 +9,6 @@ export async function connectDB(): Promise<void> {
         console.log("Connected to MongoDB");
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
-        process.exit(1);    
+        process.exit(1);
     }
 }

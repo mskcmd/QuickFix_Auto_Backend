@@ -1,4 +1,5 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+require('dotenv').config();
 import http from 'http';
 import { connectDB } from './config/mongoConfig';
 import authRoute from './routes/authRoutes';
@@ -12,11 +13,11 @@ import { errorHandler, notFound } from './middleware/errorMiddleware';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import { setupSocket } from './utils/socketLogic';
+import helmet from 'helmet';
 
-require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 5002; 
+const port = process.env.PORT || 5002;
 
 connectDB();
 
@@ -25,46 +26,26 @@ app.use(
     secret: process.env.SESSION_SECRET || uuidv4(),
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }, 
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
   })
 );
 
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend-blue.vercel.app",
-  credentials: true,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
-  optionsSuccessStatus: 200
-};
 
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
-app.use(cors(corsOptions));
 
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET,PUT,PATCH,POST,DELETE"],
+    credentials: true,
+  })
+);
 
-// app.use('*', cors(corsOptions));
+app.use(helmet());
 
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//   res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "quick-fix-auto-frontend-blue.vercel.app");
-//   res.setHeader(
-//       "Access-Control-Allow-Headers",
-//       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-//   );
-//   res.setHeader(
-//       "Access-Control-Allow-Methods",
-//       "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
-//   );
-//   res.setHeader("Access-Control-Allow-Credentials", "true");
-//   next();
-// });
-
-app.options('*', cors(corsOptions));
-
-app.use('/', (req, res) => {
-    res.send("hello world....");
-})
 
 // Routes
 app.use('/api/auth', authRoute);
