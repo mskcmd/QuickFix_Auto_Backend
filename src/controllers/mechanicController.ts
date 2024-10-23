@@ -1,6 +1,6 @@
 import { IBlog, IService, MechnicDoc, UploadedFile } from "../interfaces/IMechanic";
 import MechanicServices from "../services/mechanicServices";
-import  { Request, Response } from "express"
+import { Request, Response } from "express"
 import { sendVerifyMail } from "../utils/otpVerification";
 import { uploadFile } from "../middleware/s3UploadMiddleware";
 import User from "../models/userModel";
@@ -362,8 +362,9 @@ class mechanicController {
         mechId
       } = req.body;
 
-      const result = await this.mechanicServices.createBill(userId, name, vehicleNumber, services, subtotal, gst, total, mechId)
 
+      const result = await this.mechanicServices.createBill(userId, name, vehicleNumber, services, subtotal, gst, total, mechId)
+      res.json({ result })
     } catch (error) {
       console.log("Error:", error);
     }
@@ -440,6 +441,22 @@ class mechanicController {
     } catch (error) {
       console.error("Error adding service:", error);
       res.status(500).json({ message: 'Failed to add service', error });
+    }
+  }
+
+  async fetchMechData(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.query.id as string;
+      if (!id) {
+        res.status(400).json({ message: "ID parameter is required" });
+        return;
+      }
+      const result = await this.mechanicServices.fetchMechData(id)
+      res.json({ result })
+      return;
+    } catch (error) {
+      console.error("Error adding updateMechanicProfile:", error);
+      res.status(500).json({ message: 'Failed to add updateMechanicProfile', error });
     }
   }
 

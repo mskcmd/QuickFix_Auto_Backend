@@ -41,7 +41,7 @@ class mechanicServices {
             }
             const emailExists = await this.checkExistingEmail(email);
             if (emailExists) {
-                return { status: false, message: "Email already exists" };
+                return { status: false, message: "Email already exists ff" };
             }
             const hashpass: string = await bcrypt.hash(password, 10);
             const otp: string = await sendVerifyMail(name, email);
@@ -359,9 +359,19 @@ class mechanicServices {
             const result = await this.mechanicRepo.fetchUserGrowths(id)
             return result
         } catch (error) {
-            throw new Error((error as Error).message || 'An error occurred');
+            throw new Error((error as Error).message || 'An error fetchuserGrowths');
 
         }
+    }
+
+    async fetchMechData(id:string){
+        try {
+            const result = await this.mechanicRepo.fetchMechData(id)
+            return result
+        } catch (error) {
+            throw new Error ((error as Error).message|| "An Erorr in fetchMechData")
+        }
+
     }
 
 }

@@ -860,6 +860,54 @@ class mechanicRepositories {
         }
     }
 
+    async fetchMechData(id: string) {
+        try {
+            const mechData = await Mechanic.find({ _id: id });
+            if (!mechData || mechData.length === 0) {
+                throw new Error('Mechanic not found');
+            }
+    
+            const mechId = mechData[0].mechanicdataID;
+            const mechDataAllData:any = await MechanicData.find({ _id: mechId });
+            if (!mechDataAllData || mechDataAllData.length === 0) {
+                throw new Error('Mechanic details not found');
+            }
+    
+            // Extract only needed fields from mechData
+            const basicInfo = {
+                _id: mechData[0]._id,
+                name: mechData[0].name,
+                email: mechData[0].email,
+                phone: mechData[0].phone,
+                mechanicdataID: mechData[0].mechanicdataID
+            };
+    
+            // Combine with mechanic details
+            const combinedData = {
+                ...basicInfo,
+                location: mechDataAllData[0].location,
+                certificate: mechDataAllData[0].certificate,
+                type: mechDataAllData[0].type,
+                licenseNumber: mechDataAllData[0].licenseNumber,
+                yearsOfExperience: mechDataAllData[0].yearsOfExperience,
+                specialization: mechDataAllData[0].specialization,
+                district: mechDataAllData[0].district,
+                locationName: mechDataAllData[0].locationName,
+                services: mechDataAllData[0].services,
+                description: mechDataAllData[0].description,
+                profileImages: mechDataAllData[0].profileImages,
+                workingHours: mechDataAllData[0].workingHours
+            };
+                
+            return combinedData;
+
+        } catch (error) {
+            console.error('Error fetching fetchMechData:', error);
+            throw error;
+        }
+
+    }
+
 
 }
 
