@@ -19,6 +19,13 @@ import helmet from 'helmet';
 const app = express();
 const port = process.env.PORT || 5002;
 
+
+
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
+
 connectDB();
 
 app.use(
@@ -31,10 +38,7 @@ app.use(
 );
 
 
-app.use(bodyParser.json());
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }))
+
 
 app.use(
   cors({
