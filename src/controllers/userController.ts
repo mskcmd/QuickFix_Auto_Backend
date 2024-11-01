@@ -91,6 +91,7 @@ class UserController {
 
   async login(req: Request, res: Response): Promise<void> {
     try {
+      console.log(req.body)
       const { email, password } = req.body;
       const result = await this.userService.login(email, password);
       if (result?.result?.isVerified === false) {

@@ -33,7 +33,7 @@ app.use((0, express_session_1.default)({
     cookie: { maxAge: 24 * 60 * 60 * 1000 },
 }));
 app.use((0, cors_1.default)({
-    origin: ["http://localhost:5173"],
+    origin: process.env.CORS_ORIGIN || "*",
     methods: ["GET,PUT,PATCH,POST,DELETE"],
     credentials: true,
 }));

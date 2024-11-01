@@ -94,6 +94,7 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             try {
+                console.log(req.body);
                 const { email, password } = req.body;
                 const result = yield this.userService.login(email, password);
                 if (((_a = result === null || result === void 0 ? void 0 : result.result) === null || _a === void 0 ? void 0 : _a.isVerified) === false) {
