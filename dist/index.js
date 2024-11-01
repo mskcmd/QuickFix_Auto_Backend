@@ -39,6 +39,9 @@ app.use((0, cors_1.default)({
 }));
 app.use((0, helmet_1.default)());
 // Routes
+app.use("/", (req, res) => {
+    res.send("hai");
+});
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/mechanic', mechanicRoute_1.default);
 app.use('/api/admin', adminRoutes_1.default);
