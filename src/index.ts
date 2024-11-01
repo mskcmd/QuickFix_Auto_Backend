@@ -52,9 +52,10 @@ app.use(helmet());
 
 
 // Routes
-app.use("/", (req, res) => {
-  res.send("hai")
-})
+app.get("/", (req, res) => {
+  res.send("Welcome to the API");
+});
+
 app.use('/api/auth', authRoute);
 app.use('/api/mechanic', mechanicRoute);
 app.use('/api/admin', adminRoute);
