@@ -33,8 +33,8 @@ app.use((0, express_session_1.default)({
     cookie: { maxAge: 24 * 60 * 60 * 1000 },
 }));
 app.use((0, cors_1.default)({
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET,PUT,PATCH,POST,DELETE"],
+    origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
+    methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
 }));
 app.use((0, helmet_1.default)());

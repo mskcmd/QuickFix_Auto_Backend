@@ -42,11 +42,12 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "'https://quick-fix-auto-frontend.vercel.app" || "*",
-    methods: ["GET,PUT,PATCH,POST,DELETE"],
+    origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
+    methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
   })
 );
+
 
 app.use(helmet());
 
