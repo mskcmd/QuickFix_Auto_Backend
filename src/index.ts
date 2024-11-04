@@ -34,6 +34,7 @@ app.use(
   })
 );
 
+
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
