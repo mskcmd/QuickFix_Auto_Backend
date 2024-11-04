@@ -15,11 +15,8 @@ import bodyParser from 'body-parser';
 import { setupSocket } from './utils/socketLogic';
 import helmet from 'helmet';
 
-
 const app = express();
 const port = process.env.PORT || 5002;
-
-
 
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -37,9 +34,6 @@ app.use(
   })
 );
 
-
-
-
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
@@ -48,9 +42,7 @@ app.use(
   })
 );
 
-
 app.use(helmet());
-
 
 // Routes
 app.get("/", (req, res) => {
