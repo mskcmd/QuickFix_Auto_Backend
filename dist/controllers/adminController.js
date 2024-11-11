@@ -18,6 +18,7 @@ class AdminController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                console.log("admin");
                 const { email, password } = req.body;
                 const result = yield this.adminServices.Login(email, password);
                 if (((_a = result === null || result === void 0 ? void 0 : result.data.data) === null || _a === void 0 ? void 0 : _a.succuss) === true) {

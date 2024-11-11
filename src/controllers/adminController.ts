@@ -15,6 +15,7 @@ class AdminController {
 
   async Login(req: Request, res: Response): Promise<void> {
     try {
+      console.log("admin");
       const { email, password } = req.body
       const result = await this.adminServices.Login(email, password)
 
