@@ -48,6 +48,8 @@ const corsOptions = {
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
   optionsSuccessStatus: 200,
+    credentials: true, 
+
 };
 
 app.use('*',cors(corsOptions));
@@ -71,7 +73,7 @@ app.use(helmet());
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("Welcome to the API");
+  res.send("Welcome to the API0");
 });
 
 app.use('/api/auth', authRoute);

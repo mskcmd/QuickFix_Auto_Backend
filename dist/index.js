@@ -44,6 +44,7 @@ const corsOptions = {
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
     optionsSuccessStatus: 200,
+    credentials: true,
 };
 app.use('*', (0, cors_1.default)(corsOptions));
 app.use((req, res, next) => {
@@ -56,7 +57,7 @@ app.use((req, res, next) => {
 app.use((0, helmet_1.default)());
 // Routes
 app.get("/", (req, res) => {
-    res.send("Welcome to the API");
+    res.send("Welcome to the API0");
 });
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/mechanic', mechanicRoute_1.default);
