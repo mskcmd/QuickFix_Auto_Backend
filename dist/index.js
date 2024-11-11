@@ -32,11 +32,27 @@ app.use((0, express_session_1.default)({
     saveUninitialized: true,
     cookie: { maxAge: 24 * 60 * 60 * 1000 },
 }));
-app.use((0, cors_1.default)({
-    origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
-    methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
-    credentials: true,
-}));
+// app.use(
+//   cors({
+//     origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
+//     methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
+//     credentials: true,
+//   })
+// );
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || 'https://quick-fix-auto-frontend.vercel.app',
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
+    optionsSuccessStatus: 200,
+};
+app.use('*', (0, cors_1.default)(corsOptions));
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+});
 app.use((0, helmet_1.default)());
 // Routes
 app.get("/", (req, res) => {

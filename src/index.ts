@@ -35,13 +35,37 @@ app.use(
 );
 
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
-    methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: process.env.CORS_ORIGIN || "https://quick-fix-auto-frontend.vercel.app",
+//     methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
+//     credentials: true,
+//   })
+// );
+
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'https://quick-fix-auto-frontend.vercel.app',  
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept,Authorization',
+  optionsSuccessStatus: 200,
+};
+
+app.use('*',cors(corsOptions));
+
+app.use((req ,res ,next) => {
+  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
+  res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 
 app.use(helmet());
 
